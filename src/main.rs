@@ -1,21 +1,41 @@
+use std::ops::RangeInclusive;
+
 use bevy::{
     log::{Level, LogPlugin},
     prelude::*,
+    window::{EnabledButtons, WindowMode},
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
 use itertools::iproduct;
+
+mod window {
+    pub const DIMENSIONS: (u16, u16) = (1280, 720);
+    pub const WIDTH: u16 = DIMENSIONS.0;
+    pub const HEIGHT: u16 = DIMENSIONS.1;
+    pub const HALF_WIDTH: u16 = WIDTH / 2;
+    pub const HALF_HEIGHT: u16 = HEIGHT / 2;
+}
+mod player;
+mod projectile;
 fn main() {
     let mut app = App::new();
     app.add_plugins(
         DefaultPlugins
             .set(LogPlugin {
                 level: Level::DEBUG,
-                filter: "info,wgpu_core=warn,wgpu_hal=warn,cs_billo=debug".into(),
+                filter: "info,wgpu_core=warn,wgpu_hal=warn,bevy_space_invaders=debug".into(),
             })
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     title: "Space Invaders".into(),
+                    resizable: false,
+                    resolution: window::DIMENSIONS.into(),
+                    mode: WindowMode::Windowed,
+                    enabled_buttons: EnabledButtons {
+                        maximize: false,
+                        ..default()
+                    },
                     ..default()
                 }),
                 ..default()
@@ -25,9 +45,11 @@ fn main() {
         ScreenDiagnosticsPlugin::default(),
         ScreenFrameDiagnosticsPlugin,
     ))
-    .add_plugins(WorldInspectorPlugin::default());
-    app.add_systems(Startup, (setup_camera, setup_player, setup_enemies))
-        .add_systems(Update, (player_movement, player_shooting));
+    .add_plugins(WorldInspectorPlugin::default())
+    .add_plugins((player::Plugin, projectile::Plugin));
+
+    app.add_systems(Startup, (setup_camera, setup_enemies));
+
     bevy_mod_debugdump::print_schedule_graph(&mut app, Update);
 
     app.run();
@@ -39,77 +61,33 @@ fn setup_camera(mut commands: Commands) {
     commands.spawn((Camera2dBundle::default(), GameCameraMarker));
 }
 
-const WINDOW_DIMENSIONS: (u16, u16) = (1280, 720);
-const WINDOW_WIDTH: u16 = WINDOW_DIMENSIONS.0;
-const WINDOW_HEIGHT: u16 = WINDOW_DIMENSIONS.1;
-const WINDOW_HALF_WIDTH: u16 = WINDOW_WIDTH / 2;
-const WINDOW_HALF_HEIGHT: u16 = WINDOW_HEIGHT / 2;
 fn setup_enemies(mut commands: Commands, asset_server: Res<AssetServer>) {
-    /* TODO: Work on Enemy Offsets */
-    const X_OFFSET: f32 = WINDOW_WIDTH as f32 / 11.0;
-    const Y_OFFSET: f32 = WINDOW_HEIGHT as f32 / 11.0;
+    const X_OFFSET: f32 = window::WIDTH as f32 / 11.0;
+    const Y_OFFSET: f32 = window::HEIGHT as f32 / 11.0;
+    const ENEMY_COLUMNS: RangeInclusive<u8> = 1..=10;
+    const ENEMY_ROWS: RangeInclusive<u8> = 1..=5;
 
-    for (i, j) in iproduct!(1..=11_u8, 1..=5_u8) {
-        let texture = match j {
-            0 => asset_server.load("invader_A1.png"),
-            1 => asset_server.load("invader_A2.png"),
-            2 => asset_server.load("invader_B1.png"),
-            3 => asset_server.load("invader_B2.png"),
-            4 => asset_server.load("invader_C1.png"),
-            5 => asset_server.load("invader_C2.png"),
+    for (col, row) in iproduct!(ENEMY_COLUMNS, ENEMY_ROWS) {
+        let enemy_type = match row {
+            0 => "invader_A1.png",
+            1 => "invader_A2.png",
+            2 => "invader_B1.png",
+            3 => "invader_B2.png",
+            4 => "invader_C1.png",
+            5 => "invader_C2.png",
             _ => unreachable!(),
         };
         commands.spawn((
             SpriteBundle {
-                texture,
+                texture: asset_server.load(enemy_type),
                 transform: Transform::from_xyz(
-                    X_OFFSET.mul_add(f32::from(i), -f32::from(WINDOW_HALF_WIDTH)),
-                    Y_OFFSET.mul_add(-f32::from(j), f32::from(WINDOW_HALF_HEIGHT)),
+                    X_OFFSET.mul_add(f32::from(col), -f32::from(window::HALF_WIDTH)),
+                    Y_OFFSET.mul_add(-f32::from(row), f32::from(window::HALF_HEIGHT)),
                     0.0,
                 ),
                 ..default()
             },
-            Name::new(format!("Enemy {i}:{j}")),
+            Name::new(format!("Enemy {col}:{row}")),
         ));
-    }
-}
-
-#[derive(Component)]
-struct Player;
-fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("player.png"),
-            transform: Transform::from_xyz(0.0, -300.0, 0.0),
-            ..default()
-        },
-        Player,
-        Name::new("Player"),
-    ));
-}
-
-fn player_movement(keys: Res<Input<KeyCode>>, mut query: Query<&mut Transform, With<Player>>) {
-    const PLAYER_HALF_LENGTH: f32 = 13.0;
-    let player_velocity = keys
-        .get_pressed()
-        .map(|key| match key {
-            KeyCode::A => Vec3::new(-1.0, 0.0, 0.0),
-            KeyCode::D => Vec3::new(1.0, 0.0, 0.0),
-            _ => Vec3::splat(0.0),
-        })
-        .sum::<Vec3>();
-
-    for mut transform in &mut query {
-        transform.translation += player_velocity;
-        transform.translation.x = transform.translation.x.clamp(
-            -f32::from(WINDOW_HALF_WIDTH) + PLAYER_HALF_LENGTH,
-            f32::from(WINDOW_HALF_WIDTH) - PLAYER_HALF_LENGTH,
-        );
-    }
-}
-
-fn player_shooting(keys: Res<Input<KeyCode>>) {
-    if keys.just_pressed(KeyCode::Space) {
-        warn!("PENG!");
     }
 }
