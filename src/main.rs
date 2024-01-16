@@ -3,7 +3,7 @@ use std::ops::RangeInclusive;
 use bevy::{
     log::{Level, LogPlugin},
     prelude::*,
-    window::{EnabledButtons, WindowMode},
+    window::{close_on_esc, EnabledButtons, WindowMode},
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
@@ -48,7 +48,8 @@ fn main() {
     .add_plugins(WorldInspectorPlugin::default())
     .add_plugins((player::Plugin, projectile::Plugin));
 
-    app.add_systems(Startup, (setup_camera, setup_enemies));
+    app.add_systems(Startup, (setup_camera, setup_enemies))
+        .add_systems(Update, close_on_esc);
 
     bevy_mod_debugdump::print_schedule_graph(&mut app, Update);
 
