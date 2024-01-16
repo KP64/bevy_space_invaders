@@ -1,4 +1,4 @@
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::{app, prelude::*, sprite::MaterialMesh2dBundle};
 
 use crate::{
     projectile::{self, Projectile},
@@ -10,7 +10,7 @@ const HALF_LENGTH: u8 = LENGTH / 2;
 
 pub struct Plugin;
 
-impl bevy::app::Plugin for Plugin {
+impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup_player)
             .add_systems(Update, (player_movement, player_shooting));
@@ -33,14 +33,13 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn player_movement(keys: Res<Input<KeyCode>>, mut query: Query<&mut Transform, With<Player>>) {
-    let player_velocity = keys
-        .get_pressed()
-        .map(|key| match key {
-            KeyCode::A => Vec3::new(-1.0, 0.0, 0.0),
-            KeyCode::D => Vec3::new(1.0, 0.0, 0.0),
-            _ => Vec3::splat(0.0),
-        })
-        .sum::<Vec3>();
+    let mut player_velocity = Vec3::splat(0.0);
+    if keys.any_pressed([KeyCode::A, KeyCode::Left]) {
+        player_velocity.x -= 1.0;
+    }
+    if keys.any_pressed([KeyCode::D, KeyCode::Right]) {
+        player_velocity.x += 1.0;
+    }
 
     for mut transform in &mut query {
         transform.translation += player_velocity;
