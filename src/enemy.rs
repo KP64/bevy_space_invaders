@@ -19,7 +19,7 @@ pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_enemies)
+        app.add_systems(PostStartup, setup_enemies)
             .add_systems(Update, (check_hit, tick_shot_spawn_timer, shoot_projectile))
             .add_systems(Update, (tick_explosion_timer, despawn_explosion));
     }
@@ -48,7 +48,6 @@ fn setup_enemies(mut commands: Commands, texture_assets: Res<TextureAssets>) {
             _ => unreachable!(),
         };
 
-        /* FIXME: This is reliant on the order of Bevy Instantiation. If `TextureAssets` is not Instantiated before, this will panic. */
         let texture = texture_assets
             .enemies
             .get(enemy_type as usize)
