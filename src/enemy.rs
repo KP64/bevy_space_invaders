@@ -4,7 +4,9 @@ use bevy::{app, prelude::*};
 use itertools::iproduct;
 
 use crate::{
-    projectile::{self, Projectile},
+    asset_loader::TextureAssets,
+    projectile::{self, Direction, Projectile},
+    score::Score,
     window,
 };
 
@@ -13,32 +15,43 @@ pub struct Plugin;
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup_enemies)
-            .add_systems(Update, get_hit);
+            .add_systems(Update, (check_hit, tick_shot_spawn_timer, shoot_projectile));
     }
 }
 
 #[derive(Component)]
-struct Enemy;
+struct Enemy {
+    points_worth: u8,
+    color: Color,
+    timer: Timer,
+}
 
-fn setup_enemies(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup_enemies(mut commands: Commands, texture_assets: Res<TextureAssets>) {
+    const SHOT_SPAWN_TIME: f32 = 3.0;
+
     const X_OFFSET: f32 = window::WIDTH as f32 / 11.0;
     const Y_OFFSET: f32 = window::HEIGHT as f32 / 11.0;
     const ENEMY_COLUMNS: RangeInclusive<u8> = 1..=10;
     const ENEMY_ROWS: RangeInclusive<u8> = 1..=5;
 
     for (col, row) in iproduct!(ENEMY_COLUMNS, ENEMY_ROWS) {
-        let enemy_type = match row {
-            0 => "invader_A1.png",
-            1 => "invader_A2.png",
-            2 => "invader_B1.png",
-            3 => "invader_B2.png",
-            4 => "invader_C1.png",
-            5 => "invader_C2.png",
+        let (enemy_type, points_worth, color): (u8, u8, Color) = match row {
+            1 => (0, 50, Color::SEA_GREEN),
+            2 | 3 => (2, 25, Color::YELLOW_GREEN),
+            4 | 5 => (4, 10, Color::ORANGE_RED),
             _ => unreachable!(),
         };
+
+        /* FIXME: This is reliant on the order of Bevy Instantiation. If `TextureAssets` is not Instantiated before, this will panic. */
+        let texture = texture_assets
+            .enemies
+            .get(enemy_type as usize)
+            .unwrap_or_else(|| panic!("Could not get Enemy Texture at index {enemy_type}"))
+            .clone();
+
         commands.spawn((
             SpriteBundle {
-                texture: asset_server.load(enemy_type),
+                texture,
                 transform: Transform::from_xyz(
                     X_OFFSET.mul_add(f32::from(col), -f32::from(window::HALF_WIDTH)),
                     Y_OFFSET.mul_add(-f32::from(row), f32::from(window::HALF_HEIGHT)),
@@ -46,16 +59,57 @@ fn setup_enemies(mut commands: Commands, asset_server: Res<AssetServer>) {
                 ),
                 ..default()
             },
-            Enemy,
+            Enemy {
+                points_worth,
+                color,
+                timer: Timer::from_seconds(
+                    rand::random::<f32>().mul_add(10.0, SHOT_SPAWN_TIME),
+                    TimerMode::Repeating,
+                ),
+            },
             Name::new(format!("Enemy {col}:{row}")),
         ));
     }
 }
 
-fn get_hit(
+fn tick_shot_spawn_timer(mut query: Query<&mut Enemy>, time: Res<Time>) {
+    for mut enemy in &mut query {
+        enemy.timer.tick(time.delta());
+    }
+}
+
+fn shoot_projectile(
     mut commands: Commands,
-    enemy_query: Query<(Entity, &Transform), With<Enemy>>,
-    projectile_query: Query<(Entity, &Transform), With<Projectile>>,
+    texture_assets: Res<TextureAssets>,
+    query: Query<(&Enemy, &Transform)>,
+) {
+    for (enemy, transform) in &query {
+        if !(enemy.timer.finished() && rand::random::<bool>()) {
+            continue;
+        }
+
+        commands.spawn((
+            SpriteBundle {
+                texture: texture_assets.shots.enemy[0].clone(),
+                transform: Transform::from_translation(transform.translation),
+                sprite: Sprite {
+                    color: enemy.color,
+                    ..default()
+                },
+
+                ..default()
+            },
+            Projectile::new(Direction::Down, 5.0),
+        ));
+        break;
+    }
+}
+
+fn check_hit(
+    mut commands: Commands,
+    enemy_query: Query<(Entity, &Transform, &Enemy)>,
+    projectile_query: Query<(Entity, &Transform, &Projectile)>,
+    mut score: ResMut<Score>,
 ) {
     /* TODO: Change this number for each enemy Type */
     const LENGTH: u8 = 24;
@@ -63,12 +117,17 @@ fn get_hit(
     const HEIGHT: u8 = 16;
     const HALF_HEIGHT: f32 = (HEIGHT / 2) as f32;
 
-    fn get_enemy_translation((ent, trans): (Entity, &Transform)) -> (Entity, Vec2) {
-        (ent, trans.translation.xy())
+    fn get_xy_translation<T>((ent, trans, t): (Entity, &Transform, T)) -> (Entity, Vec2, T) {
+        (ent, trans.translation.xy(), t)
     }
 
-    for (enemy_entity, enemy_translation) in enemy_query.iter().map(get_enemy_translation) {
-        for (proj_entity, proj_translation) in projectile_query.iter().map(get_enemy_translation) {
+    for (enemy_entity, enemy_translation, enemy) in enemy_query.iter().map(get_xy_translation) {
+        for (proj_entity, proj_translation, proj) in projectile_query.iter().map(get_xy_translation)
+        {
+            if proj.direction == Direction::Down {
+                continue;
+            }
+
             let enemy_range = (
                 (enemy_translation.x - HALF_LENGTH)..=(enemy_translation.x + HALF_LENGTH),
                 enemy_translation.y - HALF_HEIGHT..=(enemy_translation.y + HALF_HEIGHT),
@@ -81,9 +140,12 @@ fn get_hit(
                 && (enemy_range.1.contains(&negative_pos.y)
                     || enemy_range.1.contains(&positive_pos.y))
             {
+                /* TODO: Spawn Death Animation */
+                score.0 += enemy.points_worth as usize;
                 commands.entity(enemy_entity).despawn();
                 commands.entity(proj_entity).despawn();
             }
         }
     }
 }
+

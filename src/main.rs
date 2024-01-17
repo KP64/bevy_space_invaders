@@ -6,6 +6,11 @@ use bevy::{
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
 
+mod asset_loader;
+mod enemy;
+mod player;
+mod projectile;
+mod score;
 mod window {
     pub const DIMENSIONS: (u16, u16) = (1280, 720);
     pub const WIDTH: u16 = DIMENSIONS.0;
@@ -13,11 +18,10 @@ mod window {
     pub const HALF_WIDTH: u16 = WIDTH / 2;
     pub const HALF_HEIGHT: u16 = HEIGHT / 2;
 }
-mod enemy;
-mod player;
-mod projectile;
+
 fn main() {
     let mut app = App::new();
+
     app.add_plugins(
         DefaultPlugins
             .set(LogPlugin {
@@ -44,7 +48,13 @@ fn main() {
         ScreenFrameDiagnosticsPlugin,
     ))
     .add_plugins(WorldInspectorPlugin::default())
-    .add_plugins((player::Plugin, projectile::Plugin, enemy::Plugin));
+    .add_plugins((
+        asset_loader::Plugin,
+        score::Plugin,
+        player::Plugin,
+        projectile::Plugin,
+        enemy::Plugin,
+    ));
 
     app.add_systems(Startup, setup_camera)
         .add_systems(Update, close_on_esc);
