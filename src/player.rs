@@ -34,8 +34,7 @@ fn setup_player(mut commands: Commands, scene_assets: Res<TextureAssets>) {
 }
 
 fn player_movement(
-    keys: Res<Input<KeyCode>>,
-    time: Res<Time>,
+    (keys, time): (Res<Input<KeyCode>>, Res<Time>),
     mut query: Query<&mut Transform, With<Player>>,
 ) {
     const VELOCITY: f32 = 400.0;
@@ -65,9 +64,11 @@ fn player_movement(
 
 fn player_shooting(
     mut commands: Commands,
-    keys: Res<Input<KeyCode>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    (mut meshes, mut materials, keys): (
+        ResMut<Assets<Mesh>>,
+        ResMut<Assets<ColorMaterial>>,
+        Res<Input<KeyCode>>,
+    ),
     query: Query<&Transform, With<Player>>,
 ) {
     const PROJECTILE_SPEED: f32 = 500.0;
@@ -97,8 +98,10 @@ fn player_shooting(
 /* TODO: Unify this function with the enemy one for less duplication */
 fn check_hit(
     mut commands: Commands,
-    enemy_query: Query<(Entity, &Transform), With<Player>>,
-    projectile_query: Query<(Entity, &Transform, &Projectile)>,
+    (enemy_query, projectile_query): (
+        Query<(Entity, &Transform), With<Player>>,
+        Query<(Entity, &Transform, &Projectile)>,
+    ),
 ) {
     const LENGTH: u8 = 26;
     const HALF_LENGTH: f32 = (LENGTH / 2) as f32;

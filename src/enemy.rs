@@ -112,10 +112,11 @@ fn shoot_projectile(
 
 fn check_hit(
     mut commands: Commands,
-    enemy_query: Query<(Entity, &Transform, &Enemy)>,
-    projectile_query: Query<(Entity, &Transform, &Projectile)>,
-    mut score: ResMut<Score>,
-    texture_assets: Res<TextureAssets>,
+    (mut score, texture_assets): (ResMut<Score>, Res<TextureAssets>),
+    (enemy_query, projectile_query): (
+        Query<(Entity, &Transform, &Enemy)>,
+        Query<(Entity, &Transform, &Projectile)>,
+    ),
 ) {
     /* TODO: Change this number for each enemy Type */
     fn get_xy_translation<T>((ent, trans, t): (Entity, &Transform, T)) -> (Entity, Vec3, T) {
