@@ -38,13 +38,13 @@ impl Projectile {
     }
 }
 
-fn move_projectiles(mut query: Query<(&mut Transform, &Projectile)>) {
+fn move_projectiles(time: Res<Time>, mut query: Query<(&mut Transform, &Projectile)>) {
     for (mut projectile, proj) in &mut query {
         projectile.translation.y += if proj.direction == Direction::Up {
             proj.speed
         } else {
             -proj.speed
-        };
+        } * time.delta_seconds();
     }
 }
 
@@ -54,9 +54,10 @@ fn despawn_out_of_window_projectiles(
 ) {
     const WINDOW_HEIGHT_RANGE: RangeInclusive<f32> =
         -(window::HALF_HEIGHT as f32)..=(window::HALF_HEIGHT as f32);
-    for (projectile, transform) in &query {
-        if !WINDOW_HEIGHT_RANGE.contains(&transform.translation.y) {
-            commands.entity(projectile).despawn();
-        }
+    for (projectile, _) in query
+        .iter()
+        .filter(|(_, transform)| !WINDOW_HEIGHT_RANGE.contains(&transform.translation.y))
+    {
+        commands.entity(projectile).despawn();
     }
 }

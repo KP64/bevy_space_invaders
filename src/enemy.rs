@@ -88,6 +88,7 @@ fn shoot_projectile(
     texture_assets: Res<TextureAssets>,
     query: Query<(&Enemy, &Transform)>,
 ) {
+    const PROJECTILE_SPEED: f32 = 450.0;
     for (enemy, transform) in &query {
         if !(enemy.timer.finished() && rand::random::<bool>()) {
             continue;
@@ -101,10 +102,9 @@ fn shoot_projectile(
                     color: enemy.color,
                     ..default()
                 },
-
                 ..default()
             },
-            Projectile::new(Direction::Down, 5.0),
+            Projectile::new(Direction::Down, PROJECTILE_SPEED),
         ));
         break;
     }
@@ -123,12 +123,11 @@ fn check_hit(
     }
 
     for (enemy_entity, enemy_translation, enemy) in enemy_query.iter().map(get_xy_translation) {
-        for (proj_entity, proj_translation, proj) in projectile_query.iter().map(get_xy_translation)
+        for (proj_entity, proj_translation, _) in projectile_query
+            .iter()
+            .map(get_xy_translation)
+            .filter(|(_, _, proj)| proj.direction != Direction::Down)
         {
-            if proj.direction == Direction::Down {
-                continue;
-            }
-
             let enemy_range = (
                 (enemy_translation.x - HALF_LENGTH)..=(enemy_translation.x + HALF_LENGTH),
                 enemy_translation.y - HALF_HEIGHT..=(enemy_translation.y + HALF_HEIGHT),
@@ -180,9 +179,10 @@ fn tick_explosion_timer(mut query: Query<&mut Explosion>, time: Res<Time>) {
 }
 
 fn despawn_explosion(mut commands: Commands, query: Query<(Entity, &Explosion)>) {
-    for (entity, explosion) in &query {
-        if explosion.timer.finished() {
-            commands.entity(entity).despawn();
-        }
+    for (entity, _) in query
+        .iter()
+        .filter(|(_, explosion)| explosion.timer.finished())
+    {
+        commands.entity(entity).despawn();
     }
 }

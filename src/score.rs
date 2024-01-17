@@ -4,8 +4,8 @@ pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Score>();
-        app.add_systems(Startup, setup_score_text)
+        app.init_resource::<Score>()
+            .add_systems(Startup, setup_score_text)
             .add_systems(Update, update_score_text);
     }
 }

@@ -1,7 +1,7 @@
 use bevy::{
     log::{Level, LogPlugin},
     prelude::*,
-    window::{close_on_esc, EnabledButtons, WindowMode},
+    window::{close_on_esc, EnabledButtons, PresentMode, WindowMode},
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
@@ -32,6 +32,7 @@ fn main() {
                 primary_window: Some(Window {
                     title: "Space Invaders".into(),
                     resizable: false,
+                    present_mode: PresentMode::AutoNoVsync,
                     resolution: window::DIMENSIONS.into(),
                     mode: WindowMode::Windowed,
                     enabled_buttons: EnabledButtons {

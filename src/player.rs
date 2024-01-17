@@ -33,13 +33,18 @@ fn setup_player(mut commands: Commands, scene_assets: Res<TextureAssets>) {
     ));
 }
 
-fn player_movement(keys: Res<Input<KeyCode>>, mut query: Query<&mut Transform, With<Player>>) {
+fn player_movement(
+    keys: Res<Input<KeyCode>>,
+    time: Res<Time>,
+    mut query: Query<&mut Transform, With<Player>>,
+) {
+    const VELOCITY: f32 = 400.0;
     let mut player_velocity = Vec3::splat(0.0);
     if keys.any_pressed([KeyCode::A, KeyCode::Left]) {
-        player_velocity.x -= 1.0;
+        player_velocity.x -= VELOCITY;
     }
     if keys.any_pressed([KeyCode::D, KeyCode::Right]) {
-        player_velocity.x += 1.0;
+        player_velocity.x += VELOCITY;
     }
 
     if player_velocity == Vec3::ZERO {
@@ -51,7 +56,7 @@ fn player_movement(keys: Res<Input<KeyCode>>, mut query: Query<&mut Transform, W
         return;
     };
 
-    player.translation += player_velocity;
+    player.translation += player_velocity * time.delta_seconds();
     player.translation.x = player.translation.x.clamp(
         -f32::from(window::HALF_WIDTH - u16::from(HALF_LENGTH)),
         f32::from(window::HALF_WIDTH - u16::from(HALF_LENGTH)),
@@ -65,6 +70,7 @@ fn player_shooting(
     mut materials: ResMut<Assets<ColorMaterial>>,
     query: Query<&Transform, With<Player>>,
 ) {
+    const PROJECTILE_SPEED: f32 = 500.0;
     if !keys.just_pressed(KeyCode::Space) {
         return;
     }
@@ -84,7 +90,7 @@ fn player_shooting(
             transform: Transform::from_translation(player_translation),
             ..default()
         },
-        Projectile::new(Direction::Up, 10.0),
+        Projectile::new(Direction::Up, PROJECTILE_SPEED),
     ));
 }
 
@@ -103,14 +109,11 @@ fn check_hit(
         .iter()
         .map(|(ent, trans)| (ent, trans.translation.xy()))
     {
-        for (proj_entity, proj_translation, proj) in projectile_query
+        for (proj_entity, proj_translation, _) in projectile_query
             .iter()
             .map(|(ent, trans, proj)| (ent, trans.translation.xy(), proj))
+            .filter(|(_, _, proj)| proj.direction != Direction::Up)
         {
-            if proj.direction == Direction::Up {
-                continue;
-            }
-
             let player_range = (
                 (player_translation.x - HALF_LENGTH)..=(player_translation.x + HALF_LENGTH),
                 player_translation.y - HALF_HEIGHT..=(player_translation.y + HALF_HEIGHT),
