@@ -10,12 +10,18 @@ use crate::{
     window,
 };
 
+const LENGTH: u8 = 24;
+const HALF_LENGTH: f32 = (LENGTH / 2) as f32;
+const HEIGHT: u8 = 16;
+const HALF_HEIGHT: f32 = (HEIGHT / 2) as f32;
+
 pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup_enemies)
-            .add_systems(Update, (check_hit, tick_shot_spawn_timer, shoot_projectile));
+            .add_systems(Update, (check_hit, tick_shot_spawn_timer, shoot_projectile))
+            .add_systems(Update, (tick_explosion_timer, despawn_explosion));
     }
 }
 
@@ -110,15 +116,11 @@ fn check_hit(
     enemy_query: Query<(Entity, &Transform, &Enemy)>,
     projectile_query: Query<(Entity, &Transform, &Projectile)>,
     mut score: ResMut<Score>,
+    texture_assets: Res<TextureAssets>,
 ) {
     /* TODO: Change this number for each enemy Type */
-    const LENGTH: u8 = 24;
-    const HALF_LENGTH: f32 = (LENGTH / 2) as f32;
-    const HEIGHT: u8 = 16;
-    const HALF_HEIGHT: f32 = (HEIGHT / 2) as f32;
-
-    fn get_xy_translation<T>((ent, trans, t): (Entity, &Transform, T)) -> (Entity, Vec2, T) {
-        (ent, trans.translation.xy(), t)
+    fn get_xy_translation<T>((ent, trans, t): (Entity, &Transform, T)) -> (Entity, Vec3, T) {
+        (ent, trans.translation, t)
     }
 
     for (enemy_entity, enemy_translation, enemy) in enemy_query.iter().map(get_xy_translation) {
@@ -133,8 +135,8 @@ fn check_hit(
                 enemy_translation.y - HALF_HEIGHT..=(enemy_translation.y + HALF_HEIGHT),
             );
 
-            let negative_pos = proj_translation - projectile::HALF_DIMENSIONS;
-            let positive_pos = proj_translation + projectile::HALF_DIMENSIONS;
+            let negative_pos = proj_translation.xy() - projectile::HALF_DIMENSIONS;
+            let positive_pos = proj_translation.xy() + projectile::HALF_DIMENSIONS;
 
             if (enemy_range.0.contains(&negative_pos.x) || enemy_range.0.contains(&positive_pos.x))
                 && (enemy_range.1.contains(&negative_pos.y)
@@ -144,8 +146,44 @@ fn check_hit(
                 score.0 += enemy.points_worth as usize;
                 commands.entity(enemy_entity).despawn();
                 commands.entity(proj_entity).despawn();
+
+                commands.spawn((
+                    SpriteBundle {
+                        transform: Transform::from_translation(enemy_translation),
+                        texture: texture_assets.explosions.enemy.clone(),
+                        ..default()
+                    },
+                    Explosion::default(),
+                ));
             }
         }
     }
 }
 
+#[derive(Component)]
+struct Explosion {
+    timer: Timer,
+}
+
+impl Default for Explosion {
+    fn default() -> Self {
+        const TIME_TILL_DESPAWN: f32 = 0.5;
+        Self {
+            timer: Timer::from_seconds(TIME_TILL_DESPAWN, TimerMode::Once),
+        }
+    }
+}
+
+fn tick_explosion_timer(mut query: Query<&mut Explosion>, time: Res<Time>) {
+    for mut ex in &mut query {
+        ex.timer.tick(time.delta());
+    }
+}
+
+fn despawn_explosion(mut commands: Commands, query: Query<(Entity, &Explosion)>) {
+    for (entity, explosion) in &query {
+        if explosion.timer.finished() {
+            commands.entity(entity).despawn();
+        }
+    }
+}
