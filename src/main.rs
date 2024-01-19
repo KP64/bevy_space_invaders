@@ -4,9 +4,11 @@ use bevy::{
     log::{Level, LogPlugin},
     prelude::*,
     window::{close_on_esc, EnabledButtons, PresentMode, WindowMode},
+    winit::WinitWindows,
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
+use winit::window::Icon;
 
 mod asset_loader;
 mod enemy;
@@ -61,7 +63,7 @@ fn main() {
         enemy::Plugin,
     ));
 
-    app.add_systems(Startup, setup_camera)
+    app.add_systems(Startup, (setup_camera, set_window_icon))
         .add_systems(Update, close_on_esc);
 
     bevy_mod_debugdump::print_schedule_graph(&mut app, Update);
@@ -73,4 +75,27 @@ fn main() {
 struct GameCameraMarker;
 fn setup_camera(mut commands: Commands) {
     commands.spawn((Camera2dBundle::default(), GameCameraMarker));
+}
+
+// TODO: Change this when Bevy adds native Window Icon Support
+fn set_window_icon(
+    // we have to use `NonSend` here
+    windows: NonSend<WinitWindows>,
+) {
+    // here we use the `image` crate to load our icon data from a png file
+    // this is not a very bevy-native solution, but it will do
+    let (icon_rgba, icon_width, icon_height) = {
+        let image = image::open("assets/game_icon_x512.png")
+            .expect("Failed to open icon path")
+            .into_rgba8();
+        let (width, height) = image.dimensions();
+        let rgba = image.into_raw();
+        (rgba, width, height)
+    };
+    let icon = Icon::from_rgba(icon_rgba, icon_width, icon_height).unwrap();
+
+    // do it for all windows
+    for window in windows.windows.values() {
+        window.set_window_icon(Some(icon.clone()));
+    }
 }
