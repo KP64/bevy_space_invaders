@@ -19,7 +19,7 @@ pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(PostStartup, setup_enemies)
+        app.add_systems(PostStartup, setup)
             .add_systems(Update, (check_hit, tick_shot_spawn_timer, shoot_projectile))
             .add_systems(Update, (tick_explosion_timer, despawn_explosion));
     }
@@ -32,7 +32,7 @@ struct Enemy {
     timer: Timer,
 }
 
-fn setup_enemies(mut commands: Commands, texture_assets: Res<TextureAssets>) {
+fn setup(mut commands: Commands, texture_assets: Res<TextureAssets>) {
     const SHOT_SPAWN_TIME: f32 = 3.0;
 
     const X_OFFSET: f32 = window::WIDTH as f32 / 11.0;

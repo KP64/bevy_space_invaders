@@ -10,6 +10,7 @@ use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlu
 
 mod asset_loader;
 mod enemy;
+mod game_time;
 mod player;
 mod projectile;
 mod score;
@@ -54,6 +55,7 @@ fn main() {
     .add_plugins((
         asset_loader::Plugin,
         score::Plugin,
+        game_time::Plugin,
         player::Plugin,
         projectile::Plugin,
         enemy::Plugin,

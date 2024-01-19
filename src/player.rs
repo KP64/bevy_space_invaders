@@ -13,15 +13,15 @@ pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_player)
-            .add_systems(Update, (player_movement, player_shooting, check_hit));
+        app.add_systems(PostStartup, setup)
+            .add_systems(Update, (movement, shooting, check_hit));
     }
 }
 
 #[derive(Component)]
 struct Player;
 
-fn setup_player(mut commands: Commands, scene_assets: Res<TextureAssets>) {
+fn setup(mut commands: Commands, scene_assets: Res<TextureAssets>) {
     commands.spawn((
         SpriteBundle {
             texture: scene_assets.player.clone(),
@@ -33,7 +33,7 @@ fn setup_player(mut commands: Commands, scene_assets: Res<TextureAssets>) {
     ));
 }
 
-fn player_movement(
+fn movement(
     (keys, time): (Res<Input<KeyCode>>, Res<Time>),
     mut query: Query<&mut Transform, With<Player>>,
 ) {
@@ -62,7 +62,7 @@ fn player_movement(
     );
 }
 
-fn player_shooting(
+fn shooting(
     mut commands: Commands,
     (mut meshes, mut materials, keys): (
         ResMut<Assets<Mesh>>,
@@ -95,7 +95,7 @@ fn player_shooting(
     ));
 }
 
-/* TODO: Unify this function with the enemy one for less duplication */
+/* TODO: Unify this function with the enemy one for less duplication? */
 fn check_hit(
     mut commands: Commands,
     (enemy_query, projectile_query): (

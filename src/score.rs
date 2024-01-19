@@ -5,21 +5,21 @@ pub struct Plugin;
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Score>()
-            .add_systems(Startup, setup_score_text)
-            .add_systems(Update, update_score_text);
+            .add_systems(Startup, setup)
+            .add_systems(Update, update);
     }
 }
 
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Deref, DerefMut)]
 pub struct Score(pub usize);
 
 #[derive(Component)]
 struct ScoreText;
 
-fn setup_score_text(mut commands: Commands) {
+fn setup(mut commands: Commands) {
     commands.spawn((
         TextBundle::from_section(
-            "Text Example",
+            "Score",
             TextStyle {
                 font_size: 30.0,
                 ..default()
@@ -38,10 +38,10 @@ fn setup_score_text(mut commands: Commands) {
     ));
 }
 
-fn update_score_text(score: Res<Score>, mut query: Query<&mut Text, With<ScoreText>>) {
+fn update(score: Res<Score>, mut query: Query<&mut Text, With<ScoreText>>) {
     let Ok(mut text) = query.get_single_mut() else {
         error!("Could not get ScoreText.");
         return;
     };
-    text.sections[0].value = score.0.to_string();
+    text.sections[0].value = score.to_string();
 }
