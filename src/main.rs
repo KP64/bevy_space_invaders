@@ -54,11 +54,7 @@ fn main() {
         ScreenDiagnosticsPlugin::default(),
         ScreenFrameDiagnosticsPlugin,
     ))
-    .add_plugins(WorldInspectorPlugin::default())
-    .add_plugins((
-        RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0),
-        RapierDebugRenderPlugin::default(),
-    ))
+    .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
     .add_plugins((
         asset_loader::Plugin,
         score::Plugin,
@@ -71,7 +67,12 @@ fn main() {
     app.add_systems(Startup, (setup_camera, set_window_icon))
         .add_systems(Update, close_on_esc);
 
-    bevy_mod_debugdump::print_schedule_graph(&mut app, Update);
+    #[cfg(debug_assertions)]
+    {
+        app.add_plugins(RapierDebugRenderPlugin::default())
+            .add_plugins(WorldInspectorPlugin::default());
+        bevy_mod_debugdump::print_schedule_graph(&mut app, Update);
+    }
 
     app.run();
 }
