@@ -1,8 +1,8 @@
-use bevy::prelude::*;
+use bevy::{app, prelude::*};
 
 pub struct Plugin;
 
-impl bevy::app::Plugin for Plugin {
+impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup).add_systems(Update, update);
     }
@@ -33,13 +33,10 @@ fn setup(mut commands: Commands) {
 }
 
 fn update(time: Res<Time>, mut query: Query<&mut Text, With<GameTime>>) {
-    let Ok(mut game_time) = query.get_single_mut() else {
-        error!("Could not get PlayTime");
-        return;
-    };
+    for mut game_time in &mut query {
+        let time = time.elapsed().as_secs();
+        let (minutes, seconds) = (time / 60, time % 60);
 
-    let time = time.elapsed().as_secs();
-    let (minutes, seconds) = (time / 60, time % 60);
-
-    game_time.sections[0].value = format!("{minutes:02}:{seconds:02}");
+        game_time.sections[0].value = format!("{minutes:02}:{seconds:02}");
+    }
 }

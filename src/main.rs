@@ -7,6 +7,7 @@ use bevy::{
     winit::WinitWindows,
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_rapier2d::prelude::*;
 use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
 use winit::window::Icon;
 
@@ -55,6 +56,10 @@ fn main() {
     ))
     .add_plugins(WorldInspectorPlugin::default())
     .add_plugins((
+        RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0),
+        RapierDebugRenderPlugin::default(),
+    ))
+    .add_plugins((
         asset_loader::Plugin,
         score::Plugin,
         game_time::Plugin,
@@ -73,6 +78,7 @@ fn main() {
 
 #[derive(Component)]
 struct GameCameraMarker;
+
 fn setup_camera(mut commands: Commands) {
     commands.spawn((Camera2dBundle::default(), GameCameraMarker));
 }
