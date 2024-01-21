@@ -6,7 +6,7 @@ use bevy::{
     window::{close_on_esc, EnabledButtons, PresentMode, WindowMode},
     winit::WinitWindows,
 };
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+
 use bevy_rapier2d::prelude::*;
 use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
 use winit::window::Icon;
@@ -69,6 +69,7 @@ fn main() {
 
     #[cfg(debug_assertions)]
     {
+        use bevy_inspector_egui::quick::WorldInspectorPlugin;
         app.add_plugins(RapierDebugRenderPlugin::default())
             .add_plugins(WorldInspectorPlugin::default());
         bevy_mod_debugdump::print_schedule_graph(&mut app, Update);
