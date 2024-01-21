@@ -2,6 +2,11 @@
 name = "bevy_space_invaders"
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/KP64/bevy_space_invaders"
+readme = "README.md"
+keywords = ["game", "space", "invaders", "bevy", "online", "rankings"]
+categories = ["games"]
+description = "A Space Invaders Clone made using Bevy."
 
 [lints.rust]
 unsafe_code = "forbid"
@@ -16,7 +21,7 @@ perf = "warn"
 pedantic = "warn"
 # restriction = "warn"
 nursery = "warn"
-# cargo = "warn"
+cargo = "warn"
 needless_pass_by_value = "allow"
 
 [dependencies]
