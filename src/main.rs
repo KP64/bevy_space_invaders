@@ -3,7 +3,7 @@
 use bevy::{
     log::{Level, LogPlugin},
     prelude::*,
-    window::{close_on_esc, EnabledButtons, PresentMode, WindowMode},
+    window::{close_on_esc, EnabledButtons, PresentMode, WindowMode, WindowResized},
     winit::WinitWindows,
 };
 
@@ -37,14 +37,9 @@ fn main() {
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     title: "Space Invaders".into(),
-                    resizable: false,
                     present_mode: PresentMode::AutoNoVsync,
                     resolution: window::DIMENSIONS.into(),
                     mode: WindowMode::Windowed,
-                    enabled_buttons: EnabledButtons {
-                        maximize: false,
-                        ..default()
-                    },
                     ..default()
                 }),
                 ..default()
