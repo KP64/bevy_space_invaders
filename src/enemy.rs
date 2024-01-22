@@ -140,10 +140,10 @@ fn check_hit(
             .iter()
             .filter(|(_, p)| p.direction.is_upwards())
         {
-            if rapier_context
-                .intersection_pair(e_entity, p_entity)
-                .is_some()
-            {
+            let Some(will_collide) = rapier_context.intersection_pair(e_entity, p_entity) else {
+                continue;
+            };
+            if will_collide {
                 score.0 += enemy.points_worth as usize;
                 commands.entity(e_entity).despawn();
                 commands.entity(p_entity).despawn();

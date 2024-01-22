@@ -1,7 +1,7 @@
 use crate::{
     asset_loader::TextureAssets,
     projectile::{self, Projectile},
-    window,
+    window, AppState,
 };
 use bevy::{app, prelude::*, sprite::MaterialMesh2dBundle};
 use bevy_rapier2d::prelude::*;
@@ -111,15 +111,17 @@ fn shoot(
 
 fn check_hit(
     mut commands: Commands,
-    rapier_context: Res<RapierContext>,
+    (mut game_state, rapier_context): (ResMut<NextState<AppState>>, Res<RapierContext>),
     (p_query, b_query): (Query<Entity, With<Player>>, Query<(Entity, &Projectile)>),
 ) {
     for player in &p_query {
         for (projectile_entity, _) in b_query.iter().filter(|(_, p)| p.direction.is_downwards()) {
-            if rapier_context
-                .intersection_pair(player, projectile_entity)
-                .is_some()
-            {
+            let Some(will_collide) = rapier_context.intersection_pair(player, projectile_entity)
+            else {
+                continue;
+            };
+            if will_collide {
+                game_state.set(AppState::GameOver);
                 commands.entity(player).despawn();
                 commands.entity(projectile_entity).despawn();
             }

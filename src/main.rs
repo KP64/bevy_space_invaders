@@ -25,6 +25,13 @@ mod window {
     pub const HALF_HEIGHT: u16 = HEIGHT / 2;
 }
 
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+pub enum AppState {
+    #[default]
+    InGame,
+    GameOver,
+}
+
 fn main() {
     let mut app = App::new();
 
@@ -63,6 +70,8 @@ fn main() {
         projectile::Plugin,
         enemy::Plugin,
     ));
+
+    app.add_state::<AppState>();
 
     app.add_systems(Startup, (setup_camera, set_window_icon))
         .add_systems(Update, close_on_esc);

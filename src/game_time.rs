@@ -1,10 +1,13 @@
 use bevy::{app, prelude::*};
 
+use crate::AppState;
+
 pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup).add_systems(Update, update);
+        app.add_systems(Startup, setup)
+            .add_systems(Update, update.run_if(in_state(AppState::InGame)));
     }
 }
 
