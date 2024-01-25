@@ -76,7 +76,7 @@ fn main() {
     app.add_state::<AppState>();
 
     app.add_systems(Startup, (setup_camera, set_window_icon))
-        .add_systems(Update, (close_on_esc, is_game_over));
+        .add_systems(Update, (close_on_esc, toggle_vsync, is_game_over));
 
     #[cfg(debug_assertions)]
     {
@@ -117,6 +117,24 @@ fn set_window_icon(
     for window in windows.windows.values() {
         window.set_window_icon(Some(icon.clone()));
     }
+}
+
+/// This system toggles the vsync mode when pressing the button V.
+/// You'll see fps increase displayed in the console.
+fn toggle_vsync(input: Res<Input<KeyCode>>, mut window_query: Query<&mut Window>) {
+    if !input.just_pressed(KeyCode::V) {
+        return;
+    }
+
+    let mut window = get_single_mut!(window_query);
+
+    window.present_mode = if matches!(window.present_mode, PresentMode::AutoVsync) {
+        PresentMode::AutoNoVsync
+    } else {
+        PresentMode::AutoVsync
+    };
+
+    info!("PRESENT_MODE: {:?}", window.present_mode);
 }
 
 fn is_game_over(
