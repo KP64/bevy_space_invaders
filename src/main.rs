@@ -3,32 +3,21 @@
 use bevy::{
     log::{Level, LogPlugin},
     prelude::*,
-    render::camera::ScalingMode,
-    window::{close_on_esc, PresentMode, WindowMode},
-    winit::WinitWindows,
+    window::{PresentMode, WindowMode},
 };
-
 use bevy_rapier2d::prelude::*;
 use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
 use enemy::invader::Invader;
 use player::Player;
-use winit::window::Icon;
 
 mod asset_loader;
+mod camera;
 mod enemy;
 mod game_time;
 mod player;
 mod projectile;
 mod score;
-mod window {
-    use bevy::math::Vec2;
-
-    pub const WIDTH: u16 = 1280;
-    pub const HEIGHT: u16 = 720;
-    pub const DIMENSIONS: Vec2 = Vec2::new(WIDTH as f32, HEIGHT as f32);
-    pub const HALF_WIDTH: u16 = WIDTH / 2;
-    pub const HALF_HEIGHT: u16 = HEIGHT / 2;
-}
+mod window;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 pub enum AppState {
@@ -61,7 +50,8 @@ fn main() {
         ScreenDiagnosticsPlugin::default(),
         ScreenFrameDiagnosticsPlugin,
     ))
-    .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+    .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
+    .add_plugins((window::Plugin, camera::Plugin))
     .add_plugins((
         asset_loader::Plugin,
         score::Plugin,
@@ -73,11 +63,7 @@ fn main() {
 
     app.add_state::<AppState>();
 
-    app.add_systems(Startup, (setup_camera, set_window_icon))
-        .add_systems(
-            Update,
-            (close_on_esc, zoom_scalingmode, toggle_vsync, is_game_over),
-        );
+    app.add_systems(Update, is_game_over);
 
     #[cfg(debug_assertions)]
     {
@@ -88,69 +74,6 @@ fn main() {
     }
 
     app.run();
-}
-
-#[derive(Component)]
-struct GameCameraMarker;
-
-fn setup_camera(mut commands: Commands) {
-    commands.spawn((Camera2dBundle::default(), GameCameraMarker));
-}
-
-fn zoom_scalingmode(
-    (mut camera_query, window_query): (
-        Query<&mut OrthographicProjection, With<GameCameraMarker>>,
-        Query<&Window>,
-    ),
-) {
-    let window = get_single!(window_query);
-
-    let w_scale = window::DIMENSIONS.x / window.width();
-    let h_scale = window::DIMENSIONS.y / window.height();
-    let final_scale = w_scale.max(h_scale);
-
-    let mut projection = get_single_mut!(camera_query);
-    projection.scaling_mode = ScalingMode::WindowSize(1.0 / final_scale);
-}
-// TODO: Change this when Bevy adds native Window Icon Support
-fn set_window_icon(
-    // we have to use `NonSend` here
-    windows: NonSend<WinitWindows>,
-) {
-    // here we use the `image` crate to load our icon data from a png file
-    // this is not a very bevy-native solution, but it will do
-    let (icon_rgba, icon_width, icon_height) = {
-        let image = image::open("assets/game_icon_x512.png")
-            .expect("Failed to open icon path")
-            .into_rgba8();
-        let (width, height) = image.dimensions();
-        let rgba = image.into_raw();
-        (rgba, width, height)
-    };
-    let icon = Icon::from_rgba(icon_rgba, icon_width, icon_height).unwrap();
-
-    // do it for all windows
-    for window in windows.windows.values() {
-        window.set_window_icon(Some(icon.clone()));
-    }
-}
-
-/// This system toggles the vsync mode when pressing the button V.
-/// You'll see fps increase displayed in the console.
-fn toggle_vsync(input: Res<Input<KeyCode>>, mut window_query: Query<&mut Window>) {
-    if !input.just_pressed(KeyCode::V) {
-        return;
-    }
-
-    let mut window = get_single_mut!(window_query);
-
-    window.present_mode = if matches!(window.present_mode, PresentMode::AutoVsync) {
-        PresentMode::AutoNoVsync
-    } else {
-        PresentMode::AutoVsync
-    };
-
-    info!("PRESENT_MODE: {:?}", window.present_mode);
 }
 
 fn is_game_over(
