@@ -1,10 +1,10 @@
 # Bevy Space Invaders 👾
 
-A Space Invaders Clone made in Bevy.
+A (yet incomplete) Space Invaders Clone made in Bevy.
 
 ## Features
 
-Online rankings 🏆
+Online rankings 🏆 (Soon)
 
 ## Performance
 

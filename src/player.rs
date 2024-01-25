@@ -1,5 +1,6 @@
 use crate::{
     asset_loader::TextureAssets,
+    get_single, get_single_mut,
     projectile::{self, Projectile},
     window,
 };
@@ -7,8 +8,8 @@ use bevy::{app, prelude::*, sprite::MaterialMesh2dBundle};
 use bevy_rapier2d::prelude::*;
 
 const LENGTH: u8 = 26;
-const HALF_LENGTH: u8 = LENGTH / 2;
 const HEIGHT: u8 = 16;
+const HALF_LENGTH: u8 = LENGTH / 2;
 const HALF_HEIGHT: u8 = HEIGHT / 2;
 
 pub struct Plugin;
@@ -23,15 +24,15 @@ impl app::Plugin for Plugin {
 #[derive(Component)]
 pub struct Player;
 
-fn setup(mut commands: Commands, scene_assets: Res<TextureAssets>) {
+fn setup(mut commands: Commands, texture_assets: Res<TextureAssets>) {
     commands.spawn((
+        Name::new("Player"),
+        Player,
         SpriteBundle {
-            texture: scene_assets.player.clone(),
+            texture: texture_assets.player.clone(),
             transform: Transform::from_xyz(0.0, -300.0, 0.0),
             ..default()
         },
-        Name::new("Player"),
-        Player,
         RigidBody::KinematicVelocityBased,
         Sensor,
         CollisionGroups::new(Group::GROUP_1, Group::GROUP_4),
@@ -59,12 +60,11 @@ fn movement(keys: Res<Input<KeyCode>>, mut query: Query<&mut Velocity, With<Play
 }
 
 fn correct_out_of_bounds(mut query: Query<&mut Transform, With<Player>>) {
-    for mut player in &mut query {
-        player.translation.x = player.translation.x.clamp(
-            -f32::from(window::HALF_WIDTH - u16::from(HALF_LENGTH)),
-            f32::from(window::HALF_WIDTH - u16::from(HALF_LENGTH)),
-        );
-    }
+    let mut player = get_single_mut!(query);
+    player.translation.x = player.translation.x.clamp(
+        -f32::from(window::HALF_WIDTH - u16::from(HALF_LENGTH)),
+        f32::from(window::HALF_WIDTH - u16::from(HALF_LENGTH)),
+    );
 }
 
 fn shoot(
@@ -82,31 +82,28 @@ fn shoot(
         return;
     }
 
-    for player in &query {
-        let mut player_translation = player.translation;
-        player_translation.y += 25.0;
+    let player = get_single!(query);
+    let mut player_translation = player.translation;
+    player_translation.y += 25.0;
 
-        commands.spawn((
-            MaterialMesh2dBundle {
-                mesh: meshes
-                    .add(shape::Quad::new(projectile::DIMENSIONS).into())
-                    .into(),
-                material: materials.add(Color::PURPLE.into()),
-                transform: Transform::from_translation(player_translation),
-                ..default()
-            },
-            Projectile {
-                direction: projectile::Direction::Up,
-            },
-            RigidBody::KinematicVelocityBased,
-            Sensor,
-            ActiveCollisionTypes::KINEMATIC_KINEMATIC | ActiveCollisionTypes::KINEMATIC_STATIC,
-            ActiveEvents::COLLISION_EVENTS,
-            Collider::cuboid(projectile::HALF_LENGTH, projectile::HALF_HEIGHT),
-            CollisionGroups::new(Group::GROUP_3, Group::GROUP_2),
-            Velocity::linear(PROJECTILE_VELOCITY),
-        ));
-    }
+    commands.spawn((
+        Projectile::new(projectile::Direction::Up),
+        MaterialMesh2dBundle {
+            mesh: meshes
+                .add(shape::Quad::new(projectile::DIMENSIONS).into())
+                .into(),
+            material: materials.add(Color::PURPLE.into()),
+            transform: Transform::from_translation(player_translation),
+            ..default()
+        },
+        RigidBody::KinematicVelocityBased,
+        Sensor,
+        ActiveCollisionTypes::KINEMATIC_KINEMATIC | ActiveCollisionTypes::KINEMATIC_STATIC,
+        ActiveEvents::COLLISION_EVENTS,
+        Collider::cuboid(projectile::HALF_LENGTH, projectile::HALF_HEIGHT),
+        CollisionGroups::new(Group::GROUP_3, Group::GROUP_2),
+        Velocity::linear(PROJECTILE_VELOCITY),
+    ));
 }
 
 fn check_hit(
@@ -114,15 +111,14 @@ fn check_hit(
     rapier_context: Res<RapierContext>,
     (p_query, b_query): (Query<Entity, With<Player>>, Query<(Entity, &Projectile)>),
 ) {
-    for player in &p_query {
-        for (projectile_entity, _) in b_query.iter().filter(|(_, p)| p.direction.is_downwards()) {
-            if rapier_context
-                .intersection_pair(player, projectile_entity)
-                .is_some()
-            {
-                commands.entity(player).despawn();
-                commands.entity(projectile_entity).despawn();
-            }
+    let player = get_single!(p_query);
+    for (projectile_entity, _) in b_query.iter().filter(|(_, p)| p.direction.is_downwards()) {
+        let Some(will_collide) = rapier_context.intersection_pair(player, projectile_entity) else {
+            continue;
+        };
+        if will_collide {
+            commands.entity(player).despawn();
+            commands.entity(projectile_entity).despawn();
         }
     }
 }

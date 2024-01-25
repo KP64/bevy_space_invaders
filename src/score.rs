@@ -1,5 +1,7 @@
 use bevy::{app, prelude::*};
 
+use crate::get_single_mut;
+
 pub struct Plugin;
 
 impl app::Plugin for Plugin {
@@ -39,9 +41,6 @@ fn setup(mut commands: Commands) {
 }
 
 fn update(score: Res<Score>, mut query: Query<&mut Text, With<ScoreText>>) {
-    let Ok(mut text) = query.get_single_mut() else {
-        error!("Could not get ScoreText.");
-        return;
-    };
+    let mut text = get_single_mut!(query);
     text.sections[0].value = score.to_string();
 }
