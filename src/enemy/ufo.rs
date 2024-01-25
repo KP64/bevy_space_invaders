@@ -1,4 +1,4 @@
-use std::ops::{Range, RangeInclusive};
+use std::ops::Range;
 
 use bevy::{app, prelude::*};
 use bevy_rapier2d::prelude::*;
