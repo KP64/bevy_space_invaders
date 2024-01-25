@@ -25,7 +25,7 @@ pub struct Plugin;
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<TextureAssets>()
-            .add_systems(Startup, load_assets);
+            .add_systems(PreStartup, load_assets);
     }
 }
 

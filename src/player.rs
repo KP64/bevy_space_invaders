@@ -16,7 +16,7 @@ pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(PostStartup, setup)
+        app.add_systems(Startup, setup)
             .add_systems(Update, (movement, check_hit, correct_out_of_bounds, shoot));
     }
 }
