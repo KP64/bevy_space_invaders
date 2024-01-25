@@ -3,11 +3,11 @@ use std::ops::RangeInclusive;
 use crate::window;
 use bevy::{app, prelude::*};
 
-pub const DIMENSIONS: Vec2 = Vec2::new(5.0, 25.0);
-pub const LENGTH: f32 = DIMENSIONS.x;
-pub const HEIGHT: f32 = DIMENSIONS.y;
-pub const HALF_LENGTH: f32 = LENGTH / 2.0;
-pub const HALF_HEIGHT: f32 = HEIGHT / 2.0;
+pub const LENGTH: u8 = 5;
+pub const HEIGHT: u8 = 25;
+pub const DIMENSIONS: Vec2 = Vec2::new(LENGTH as f32, HEIGHT as f32);
+pub const HALF_LENGTH: f32 = DIMENSIONS.x / 2.0;
+pub const HALF_HEIGHT: f32 = DIMENSIONS.y / 2.0;
 
 pub struct Plugin;
 
@@ -36,6 +36,12 @@ impl Direction {
 #[derive(Component)]
 pub struct Projectile {
     pub direction: Direction,
+}
+
+impl Projectile {
+    pub const fn new(direction: Direction) -> Self {
+        Self { direction }
+    }
 }
 
 fn despawn_out_of_window(

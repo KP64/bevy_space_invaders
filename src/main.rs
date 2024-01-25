@@ -9,6 +9,8 @@ use bevy::{
 
 use bevy_rapier2d::prelude::*;
 use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
+use enemy::invader::Invader;
+use player::Player;
 use winit::window::Icon;
 
 mod asset_loader;
@@ -74,7 +76,7 @@ fn main() {
     app.add_state::<AppState>();
 
     app.add_systems(Startup, (setup_camera, set_window_icon))
-        .add_systems(Update, close_on_esc);
+        .add_systems(Update, (close_on_esc, is_game_over));
 
     #[cfg(debug_assertions)]
     {
@@ -115,4 +117,33 @@ fn set_window_icon(
     for window in windows.windows.values() {
         window.set_window_icon(Some(icon.clone()));
     }
+}
+
+fn is_game_over(
+    mut game_state: ResMut<NextState<AppState>>,
+    (player_query, invader_query): (Query<&Player>, Query<&Invader>),
+) {
+    if invader_query.is_empty() || player_query.is_empty() {
+        game_state.set(AppState::GameOver);
+    }
+}
+
+#[macro_export]
+macro_rules! get_single {
+    ($q:expr) => {
+        match $q.get_single() {
+            Ok(m) => m,
+            _ => return,
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! get_single_mut {
+    ($q:expr) => {
+        match $q.get_single_mut() {
+            Ok(m) => m,
+            _ => return,
+        }
+    };
 }

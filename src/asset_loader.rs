@@ -2,7 +2,8 @@ use bevy::{app, prelude::*};
 
 #[derive(Resource, Debug, Default)]
 pub struct TextureAssets {
-    pub enemies: Vec<Handle<Image>>,
+    pub invaders: Vec<Handle<Image>>,
+    pub ufo: Handle<Image>,
     pub player: Handle<Image>,
     pub explosions: Explosions,
     pub shots: Shots,
@@ -30,14 +31,15 @@ impl app::Plugin for Plugin {
 
 fn load_assets(mut scene_assets: ResMut<TextureAssets>, asset_server: Res<AssetServer>) {
     let enemy_types = ["A1", "A2", "B1", "B2", "C1", "C2"];
-    let enemies = enemy_types
+    let invaders = enemy_types
         .iter()
         .map(|enemy_type| format!("invader_{enemy_type}.png"))
         .map(|enemy| asset_server.load(enemy))
         .collect::<Vec<_>>();
 
     *scene_assets = TextureAssets {
-        enemies,
+        invaders,
+        ufo: asset_server.load("UFO.png"),
         player: asset_server.load("Player.png"),
         explosions: Explosions {
             player: asset_server.load("PlayerExplosion.png"),

@@ -1,6 +1,6 @@
 use bevy::{app, prelude::*};
 
-use crate::AppState;
+use crate::{get_single_mut, AppState};
 
 pub struct Plugin;
 
@@ -36,10 +36,9 @@ fn setup(mut commands: Commands) {
 }
 
 fn update(time: Res<Time>, mut query: Query<&mut Text, With<GameTime>>) {
-    for mut game_time in &mut query {
-        let time = time.elapsed().as_secs();
-        let (minutes, seconds) = (time / 60, time % 60);
+    let mut game_time = get_single_mut!(query);
+    let time = time.elapsed().as_secs();
+    let (minutes, seconds) = (time / 60, time % 60);
 
-        game_time.sections[0].value = format!("{minutes:02}:{seconds:02}");
-    }
+    game_time.sections[0].value = format!("{minutes:02}:{seconds:02}");
 }
