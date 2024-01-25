@@ -3,7 +3,8 @@
 use bevy::{
     log::{Level, LogPlugin},
     prelude::*,
-    window::{close_on_esc, EnabledButtons, PresentMode, WindowMode, WindowResized},
+    render::camera::ScalingMode,
+    window::{close_on_esc, PresentMode, WindowMode},
     winit::WinitWindows,
 };
 
@@ -18,9 +19,11 @@ mod player;
 mod projectile;
 mod score;
 mod window {
-    pub const DIMENSIONS: (u16, u16) = (1280, 720);
-    pub const WIDTH: u16 = DIMENSIONS.0;
-    pub const HEIGHT: u16 = DIMENSIONS.1;
+    use bevy::math::Vec2;
+
+    pub const WIDTH: u16 = 1280;
+    pub const HEIGHT: u16 = 720;
+    pub const DIMENSIONS: Vec2 = Vec2::new(WIDTH as f32, HEIGHT as f32);
     pub const HALF_WIDTH: u16 = WIDTH / 2;
     pub const HALF_HEIGHT: u16 = HEIGHT / 2;
 }
@@ -60,7 +63,7 @@ fn main() {
     ));
 
     app.add_systems(Startup, (setup_camera, set_window_icon))
-        .add_systems(Update, close_on_esc);
+        .add_systems(Update, (close_on_esc, zoom_scalingmode));
 
     #[cfg(debug_assertions)]
     {
@@ -80,6 +83,19 @@ fn setup_camera(mut commands: Commands) {
     commands.spawn((Camera2dBundle::default(), GameCameraMarker));
 }
 
+fn zoom_scalingmode(
+    windows: Query<&Window>,
+    mut query_camera: Query<&mut OrthographicProjection, With<GameCameraMarker>>,
+) {
+    let window = windows.single();
+
+    let w_scale = window::DIMENSIONS.x / window.width();
+    let h_scale = window::DIMENSIONS.y / window.height();
+    let final_scale = w_scale.max(h_scale);
+
+    let mut projection = query_camera.single_mut();
+    projection.scaling_mode = ScalingMode::WindowSize(1.0 / final_scale);
+}
 // TODO: Change this when Bevy adds native Window Icon Support
 fn set_window_icon(
     // we have to use `NonSend` here
