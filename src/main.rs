@@ -74,7 +74,10 @@ fn main() {
     app.add_state::<AppState>();
 
     app.add_systems(Startup, (setup_camera, set_window_icon))
-        .add_systems(Update, (close_on_esc, zoom_scalingmode, toggle_vsync, is_game_over));
+        .add_systems(
+            Update,
+            (close_on_esc, zoom_scalingmode, toggle_vsync, is_game_over),
+        );
 
     #[cfg(debug_assertions)]
     {
@@ -95,16 +98,18 @@ fn setup_camera(mut commands: Commands) {
 }
 
 fn zoom_scalingmode(
-    windows: Query<&Window>,
-    mut query_camera: Query<&mut OrthographicProjection, With<GameCameraMarker>>,
+    (mut camera_query, window_query): (
+        Query<&mut OrthographicProjection, With<GameCameraMarker>>,
+        Query<&Window>,
+    ),
 ) {
-    let window = windows.single();
+    let window = get_single!(window_query);
 
     let w_scale = window::DIMENSIONS.x / window.width();
     let h_scale = window::DIMENSIONS.y / window.height();
     let final_scale = w_scale.max(h_scale);
 
-    let mut projection = query_camera.single_mut();
+    let mut projection = get_single_mut!(camera_query);
     projection.scaling_mode = ScalingMode::WindowSize(1.0 / final_scale);
 }
 // TODO: Change this when Bevy adds native Window Icon Support
