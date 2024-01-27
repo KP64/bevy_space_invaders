@@ -11,7 +11,7 @@ use crate::{asset_loader::TextureAssets, projectile::Projectile, score::Score};
 
 use self::explosion::Explosion;
 
-const COLUMNS: RangeInclusive<u8> = 1..=10;
+const COLUMNS: RangeInclusive<u8> = 1..=15;
 const ROWS: RangeInclusive<u8> = 1..=6;
 
 pub struct Plugin;
