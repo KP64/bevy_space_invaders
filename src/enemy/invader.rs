@@ -1,4 +1,6 @@
-use bevy::{app, prelude::*};
+use std::marker::PhantomData;
+
+use bevy::{app, prelude::*, time::Timer as BevyTimer};
 use bevy_rapier2d::prelude::*;
 use itertools::iproduct;
 
@@ -14,14 +16,21 @@ const HEIGHT: u8 = 16;
 const HALF_LENGTH: u8 = LENGTH / 2;
 const HALF_HEIGHT: u8 = HEIGHT / 2;
 const SHOT_SPAWN_TIME_DURATION: f32 = 3.0;
-const MOVE_TIME_DURATION: f32 = 5.0;
+const MOVE_TIME_DURATION: f32 = 3.0;
 
 pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup)
-            .add_systems(Update, (tick_spawn_shot, tick_movement, movement, shoot));
+        app.add_systems(Startup, setup).add_systems(
+            Update,
+            (
+                tick_timer::<Movement>,
+                tick_timer::<Shooting>,
+                movement,
+                shoot,
+            ),
+        );
     }
 }
 
@@ -36,39 +45,43 @@ impl Invader {
     }
 }
 
-#[derive(Component)]
-struct ShotTimer(Timer);
+struct Shooting;
+struct Movement;
 
-impl Default for ShotTimer {
+#[derive(Component, Deref, DerefMut)]
+struct Timer<T> {
+    #[deref]
+    timer: BevyTimer,
+    phantom: PhantomData<T>,
+}
+
+impl Default for Timer<Movement> {
     fn default() -> Self {
-        Self(Timer::from_seconds(
-            rand::random::<f32>().mul_add(10.0, SHOT_SPAWN_TIME_DURATION),
-            TimerMode::Repeating,
-        ))
+        Self {
+            timer: BevyTimer::from_seconds(MOVE_TIME_DURATION, TimerMode::Repeating),
+            phantom: default(),
+        }
     }
 }
 
-#[derive(Component)]
-struct MoveTimer(Timer);
-
-impl Default for MoveTimer {
+impl Default for Timer<Shooting> {
     fn default() -> Self {
-        Self(Timer::from_seconds(
-            MOVE_TIME_DURATION,
-            TimerMode::Repeating,
-        ))
+        Self {
+            timer: BevyTimer::from_seconds(
+                rand::random::<f32>().mul_add(10.0, SHOT_SPAWN_TIME_DURATION),
+                TimerMode::Repeating,
+            ),
+            phantom: default(),
+        }
     }
 }
 
-fn tick_spawn_shot(mut query: Query<&mut ShotTimer>, time: Res<Time>) {
+fn tick_timer<T>(mut query: Query<&mut Timer<T>>, time: Res<Time>)
+where
+    T: Send + Sync + 'static,
+{
     for mut invader in &mut query {
-        invader.0.tick(time.delta());
-    }
-}
-
-fn tick_movement(mut query: Query<&mut MoveTimer>, time: Res<Time>) {
-    for mut invader in &mut query {
-        invader.0.tick(time.delta());
+        invader.tick(time.delta());
     }
 }
 
@@ -91,27 +104,19 @@ const MOVEMENT: [Direction; 6] = [
 ];
 
 fn movement(
-    mut query: Query<
-        (
-            &mut MovementPointer,
-            &mut KinematicCharacterController,
-            &MoveTimer,
-        ),
-        With<Invader>,
-    >,
+    mut query: Query<(&mut MovementPointer, &mut Velocity, &Timer<Movement>), With<Invader>>,
 ) {
-    for (mut move_pointer, mut controller, _) in
-        query.iter_mut().filter(|(_, _, timer)| timer.0.finished())
+    for (mut move_pointer, mut velocity, _) in
+        query.iter_mut().filter(|(_, _, timer)| timer.finished())
     {
         #[allow(clippy::cast_precision_loss)]
-        let x_offset = f32::from(window::WIDTH) / enemy::COLUMNS.count() as f32;
-        let x_offset = x_offset / 4.0;
+        let x_offset = f32::from(window::WIDTH) / enemy::COLUMNS.count() as f32 / 4.0;
 
-        controller.translation = Some(match MOVEMENT[move_pointer.0] {
+        velocity.linvel = match MOVEMENT[move_pointer.0] {
             Direction::Left => Vec2::new(-x_offset, 0.0),
             Direction::Right => Vec2::new(x_offset, 0.0),
             Direction::Down => Vec2::new(0.0, -Y_OFFSET / 4.0),
-        });
+        };
         move_pointer.0 = (move_pointer.0 + 1) % MOVEMENT.len();
     }
 }
@@ -128,11 +133,7 @@ fn setup(mut commands: Commands, texture_assets: Res<TextureAssets>) {
         let (invader_type, points_worth, color): (usize, u8, Color) = match grouping {
             0 => (0, 30, Color::SEA_GREEN),
             1 => (2, 20, Color::YELLOW_GREEN),
-            2 => (4, 10, Color::ORANGE_RED),
-            _ => {
-                warn!("Not Suitable Row Count for invader spawning");
-                continue;
-            }
+            _ => (4, 10, Color::ORANGE_RED),
         };
 
         let texture = texture_assets
@@ -146,8 +147,8 @@ fn setup(mut commands: Commands, texture_assets: Res<TextureAssets>) {
             Invader::new(color),
             Enemy,
             enemy::Points(points_worth.into()),
-            ShotTimer::default(),
-            MoveTimer::default(),
+            Timer::<Shooting>::default(),
+            Timer::<Movement>::default(),
             MovementPointer::default(),
             SpriteBundle {
                 texture,
@@ -160,14 +161,12 @@ fn setup(mut commands: Commands, texture_assets: Res<TextureAssets>) {
                 ..default()
             },
             RigidBody::KinematicVelocityBased,
-            KinematicCharacterController {
-                filter_groups: Some(CollisionGroups::new(Group::GROUP_2, Group::GROUP_3)),
-                ..default()
-            },
             Sensor,
             ActiveCollisionTypes::KINEMATIC_STATIC,
             ActiveEvents::COLLISION_EVENTS,
+            CollisionGroups::new(Group::GROUP_2, Group::GROUP_3),
             Collider::cuboid(f32::from(HALF_LENGTH), f32::from(HALF_HEIGHT)),
+            Velocity::zero(),
         ));
     }
 }
@@ -175,12 +174,12 @@ fn setup(mut commands: Commands, texture_assets: Res<TextureAssets>) {
 fn shoot(
     mut commands: Commands,
     texture_assets: Res<TextureAssets>,
-    query: Query<(&Invader, &ShotTimer, &Transform)>,
+    query: Query<(&Invader, &Timer<Shooting>, &Transform)>,
 ) {
     const PROJECTILE_VELOCITY: Vec2 = Vec2::new(0.0, -450.0);
 
-    for (invader, i_timer, transform) in &query {
-        if !(i_timer.0.finished() && rand::random::<bool>()) {
+    for (invader, timer, transform) in &query {
+        if !(timer.finished() && rand::random::<bool>()) {
             continue;
         }
 
