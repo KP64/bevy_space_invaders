@@ -2,7 +2,7 @@ use crate::{
     asset_loader::TextureAssets,
     get_single, get_single_mut,
     projectile::{self, Projectile},
-    window,
+    window, AppState,
 };
 use bevy::{app, prelude::*, sprite::MaterialMesh2dBundle};
 use bevy_rapier2d::prelude::*;
@@ -16,8 +16,14 @@ pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup)
-            .add_systems(Update, (movement, check_hit, correct_out_of_bounds, shoot));
+        app.add_systems(Startup, setup).add_systems(
+            Update,
+            (
+                (movement, shoot).run_if(in_state(AppState::InGame)),
+                check_hit,
+                correct_out_of_bounds,
+            ),
+        );
     }
 }
 
