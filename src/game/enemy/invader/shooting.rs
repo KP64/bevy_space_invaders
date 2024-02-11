@@ -4,7 +4,7 @@ use bevy_rand::{prelude::ChaCha8Rng, resource::GlobalEntropy};
 use bevy_rapier2d::prelude::*;
 use rand::Rng;
 
-const SECONDS_TILL_SPAWN: f32 = 3.0;
+const SECONDS_TILL_SPAWN: f32 = 1.5;
 const PROBABILITY_TO_SHOOT: f64 = 0.3;
 pub struct Plugin;
 
@@ -24,7 +24,8 @@ fn tick_timer(time: Res<Time>, mut query: Query<&mut Timer>) {
 }
 
 #[derive(Component, Deref, DerefMut)]
-pub(super) struct Timer(pub(super) time::Timer);
+pub(super) struct Timer(time::Timer);
+
 impl Default for Timer {
     fn default() -> Self {
         // TODO: Try to switch this to bevy_rand ?
@@ -42,11 +43,10 @@ fn shoot(
     ),
     query: Query<(&Timer, &GlobalTransform), With<Enemy>>,
 ) {
-    for (timer, transform) in &query {
-        if !(timer.finished() && rng.gen_bool(PROBABILITY_TO_SHOOT)) {
-            continue;
-        }
-
+    for (_, transform) in query
+        .iter()
+        .filter(|(timer, _)| timer.finished() && rng.gen_bool(PROBABILITY_TO_SHOOT))
+    {
         projectile_spawn_event.send(projectile::Spawn {
             velocity: Velocity::linear(Vec2::new(0.0, -400.0)),
             collision_target_groups: CollisionGroups::new(

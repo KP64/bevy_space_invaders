@@ -1,5 +1,5 @@
 use super::{cell, Level, Score, Time};
-use crate::{game, get_single_mut};
+use crate::{game, get_single_mut, AppState};
 use bevy::{app, prelude::*, time};
 
 pub struct Plugin;
@@ -10,11 +10,17 @@ impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<UiData>()
             .init_resource::<Time>()
-            .add_systems(OnEnter(game::State::Setup), setup)
+            .add_systems(
+                OnTransition {
+                    from: AppState::MainMenu,
+                    to: AppState::Game,
+                },
+                setup,
+            )
             .add_systems(
                 Update,
                 (tick_timer, update_time, update_score, update_level)
-                    .run_if(in_state(game::State::Playing)),
+                    .run_if(in_state(AppState::Game)),
             )
             .add_systems(OnEnter(game::State::Exit), cleanup);
     }

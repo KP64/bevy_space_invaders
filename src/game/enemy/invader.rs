@@ -1,5 +1,5 @@
 use super::{Enemy, PointsWorth};
-use crate::game::{self, cell, projectile};
+use crate::game::{self, cell};
 use bevy::{app, prelude::*};
 use bevy_rapier2d::prelude::*;
 
@@ -23,7 +23,14 @@ pub struct Plugin;
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((movement::Plugin, shooting::Plugin))
-            .add_systems(OnEnter(game::State::Setup), setup);
+            .add_systems(OnEnter(game::State::Setup), setup)
+            .add_systems(OnEnter(game::State::LvlFinished), cleanup);
+    }
+}
+
+fn cleanup(mut commands: Commands, query: Query<Entity, With<Row>>) {
+    for row in &query {
+        commands.entity(row).despawn_recursive();
     }
 }
 
@@ -64,14 +71,7 @@ impl Bundle {
     }
 }
 
-fn setup(
-    mut commands: Commands,
-    (game_board, loader, mut projectile_spawn_event): (
-        Res<game::Board>,
-        Res<AssetServer>,
-        EventWriter<projectile::Spawn>,
-    ),
-) {
+fn setup(mut commands: Commands, (game_board, loader): (Res<game::Board>, Res<AssetServer>)) {
     for (row_idx, row) in game_board
         .iter()
         .enumerate()
