@@ -1,27 +1,26 @@
-use bevy::{app, prelude::*, render::camera::ScalingMode};
-
 use crate::{get_single, get_single_mut, window};
+use bevy::{app, prelude::*, render::camera::ScalingMode, window::PrimaryWindow};
 
 pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_camera)
-            .add_systems(Update, zoom_scalingmode);
+        app.add_systems(Startup, setup)
+            .add_systems(Update, change_scale);
     }
 }
 
 #[derive(Component)]
-struct GameCameraMarker;
+struct Marker;
 
-fn setup_camera(mut commands: Commands) {
-    commands.spawn((Camera2dBundle::default(), GameCameraMarker));
+fn setup(mut commands: Commands) {
+    commands.spawn((Name::new("Camera"), Camera2dBundle::default(), Marker));
 }
 
-fn zoom_scalingmode(
+fn change_scale(
     (mut camera_query, window_query): (
-        Query<&mut OrthographicProjection, With<GameCameraMarker>>,
-        Query<&Window>,
+        Query<&mut OrthographicProjection, With<Marker>>,
+        Query<&Window, With<PrimaryWindow>>,
     ),
 ) {
     let window = get_single!(window_query);

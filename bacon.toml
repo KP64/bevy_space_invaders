@@ -5,7 +5,7 @@
 # You can also check bacon's own bacon.toml file
 #  as an example: https://github.com/Canop/bacon/blob/main/bacon.toml
 
-default_job = "check"
+default_job = "run"
 
 [jobs.check]
 command = ["cargo", "check", "--color", "always"]
@@ -17,9 +17,32 @@ need_stdout = false
 
 [jobs.clippy]
 command = [
-    "cargo", "clippy",
+    "cargo",
+    "clippy",
     "--all-targets",
-    "--color", "always",
+    "--color",
+    "always",
+    "--",
+    "-W",
+    "clippy::all",
+    "-D",
+    "clippy::correctness",
+    "-W",
+    "clippy::suspicious",
+    "-W",
+    "clippy::style",
+    "-W",
+    "clippy::complexity",
+    "-W",
+    "clippy::perf",
+    "-W",
+    "clippy::pedantic",
+    "-W",
+    "clippy::nursery",
+    "-W",
+    "clippy::cargo",
+    "-A",
+    "clippy::needless_pass_by_value",
 ]
 need_stdout = false
 
@@ -29,8 +52,13 @@ need_stdout = false
 # - the tests of a package: bacon test -- -- -p config
 [jobs.test]
 command = [
-    "cargo", "test", "--color", "always",
-    "--", "--color", "always", # see https://github.com/Canop/bacon/issues/124
+    "cargo",
+    "test",
+    "--color",
+    "always",
+    "--",
+    "--color",
+    "always",  # see https://github.com/Canop/bacon/issues/124
 ]
 need_stdout = true
 
@@ -43,7 +71,8 @@ need_stdout = false
 [jobs.doc-open]
 command = ["cargo", "doc", "--color", "always", "--no-deps", "--open"]
 need_stdout = false
-on_success = "back" # so that we don't open the browser at each change
+# so that we don't open the browser at each change
+on_success = "back"
 
 # You can run your application and have the result displayed in bacon,
 # *if* it makes sense for this crate.
@@ -54,8 +83,10 @@ on_success = "back" # so that we don't open the browser at each change
 # of waiting for program's end.
 [jobs.run]
 command = [
-    "cargo", "run",
-    "--color", "always",
+    "cargo",
+    "run",
+    "--color",
+    "always",
     # put launch parameters for your program behind a `--` separator
 ]
 need_stdout = true

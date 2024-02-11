@@ -1,25 +1,58 @@
+use crate::{get_single_mut, AppState};
 use bevy::{
     app,
     prelude::*,
-    window::{close_on_esc, PresentMode},
+    window::{close_on_esc, PresentMode, PrimaryWindow, WindowMode},
     winit::WinitWindows,
 };
 use winit::window::Icon;
 
-use crate::get_single_mut;
+#[derive(Event, Default)]
+pub struct Fullscreen;
 
-pub const WIDTH: u16 = 1280;
-pub const HEIGHT: u16 = 720;
-pub const DIMENSIONS: Vec2 = Vec2::new(WIDTH as f32, HEIGHT as f32);
-pub const HALF_WIDTH: u16 = WIDTH / 2;
-pub const HALF_HEIGHT: u16 = HEIGHT / 2;
+#[derive(Event, Default)]
+pub struct VsyncToggle;
+
+pub const DIMENSIONS: Vec2 = Vec2::new(1280.0, 720.0);
 
 pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, set_window_icon)
-            .add_systems(Update, (close_on_esc, toggle_vsync));
+        app.add_event::<Fullscreen>()
+            .add_event::<VsyncToggle>()
+            .add_systems(Startup, set_window_icon)
+            .add_systems(Update, (close_on_esc, toggle_vsync))
+            .add_systems(Update, fullscreen.run_if(in_state(AppState::Settings)));
+    }
+}
+
+fn fullscreen(
+    mut event: EventReader<Fullscreen>,
+    mut window: Query<&mut Window, With<PrimaryWindow>>,
+) {
+    for _ in event.read() {
+        let mut window = get_single_mut!(window);
+        window.mode = if window.mode == WindowMode::Windowed {
+            WindowMode::Fullscreen
+        } else {
+            WindowMode::Windowed
+        };
+    }
+}
+
+fn toggle_vsync(
+    mut event: EventReader<VsyncToggle>,
+    mut window: Query<&mut Window, With<PrimaryWindow>>,
+) {
+    let mut window = get_single_mut!(window);
+    for _ in event.read() {
+        let present_mode = if window.present_mode == PresentMode::AutoVsync {
+            PresentMode::AutoNoVsync
+        } else {
+            PresentMode::AutoVsync
+        };
+        window.present_mode = present_mode;
     }
 }
 
@@ -41,22 +74,4 @@ fn set_window_icon(windows: NonSend<WinitWindows>) {
     for window in windows.windows.values() {
         window.set_window_icon(Some(icon.clone()));
     }
-}
-
-/// This system toggles the vsync mode when pressing the button V.
-/// You'll see fps increase displayed in the console.
-fn toggle_vsync(input: Res<Input<KeyCode>>, mut window_query: Query<&mut Window>) {
-    if !input.just_pressed(KeyCode::V) {
-        return;
-    }
-
-    let mut window = get_single_mut!(window_query);
-
-    window.present_mode = if window.present_mode == PresentMode::AutoVsync {
-        PresentMode::AutoNoVsync
-    } else {
-        PresentMode::AutoVsync
-    };
-
-    info!("PRESENT_MODE: {:?}", window.present_mode);
 }

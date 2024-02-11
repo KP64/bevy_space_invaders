@@ -1,0 +1,113 @@
+use super::{Enemy, PointsWorth};
+use crate::game::{self, cell, projectile};
+use bevy::{app, prelude::*};
+use bevy_rapier2d::prelude::*;
+
+mod movement;
+mod shooting;
+
+type Type = char;
+type Dimensions = Vec2;
+type Points = usize;
+
+const TYPES: [(Type, Dimensions, Points); 3] = [
+    ('A', Vec2::new(16.0, 16.0), 30),
+    ('B', Vec2::new(22.0, 16.0), 20),
+    ('C', Vec2::new(24.0, 16.0), 10),
+];
+const ROWS_TO_POPULATE: usize = 5;
+const ROWS_TO_SKIP: usize = 2;
+
+pub struct Plugin;
+
+impl app::Plugin for Plugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins((movement::Plugin, shooting::Plugin))
+            .add_systems(OnEnter(game::State::Setup), setup);
+    }
+}
+
+#[derive(Component)]
+struct Row;
+
+#[derive(Bundle)]
+struct Bundle {
+    enemy: Enemy,
+    points: PointsWorth,
+    shooting_timer: shooting::Timer,
+    sprite: SpriteBundle,
+    rigidbody: RigidBody,
+    velocity: Velocity,
+    sensor: Sensor,
+    active_collision_types: ActiveCollisionTypes,
+    active_events: ActiveEvents,
+    collider: Collider,
+    collision_groups: CollisionGroups,
+}
+
+impl Bundle {
+    fn new(points: PointsWorth, sprite: SpriteBundle, collider: Collider) -> Self {
+        Self {
+            enemy: Enemy,
+            points,
+            shooting_timer: shooting::Timer::default(),
+            sprite,
+            rigidbody: RigidBody::KinematicPositionBased,
+            velocity: Velocity::zero(),
+            sensor: Sensor,
+            active_collision_types: ActiveCollisionTypes::KINEMATIC_KINEMATIC
+                | ActiveCollisionTypes::KINEMATIC_STATIC,
+            active_events: ActiveEvents::COLLISION_EVENTS,
+            collider,
+            collision_groups: CollisionGroups::new(Group::GROUP_2, Group::GROUP_3),
+        }
+    }
+}
+
+fn setup(
+    mut commands: Commands,
+    (game_board, loader, mut projectile_spawn_event): (
+        Res<game::Board>,
+        Res<AssetServer>,
+        EventWriter<projectile::Spawn>,
+    ),
+) {
+    for (row_idx, row) in game_board
+        .iter()
+        .enumerate()
+        .skip(ROWS_TO_SKIP)
+        .take(ROWS_TO_POPULATE)
+    {
+        let row_cell_y_offset = row
+            .first()
+            .unwrap_or_else(|| panic!("Could not get the first Cellposition of row {row_idx}"))
+            .y;
+        let mut entity = commands.spawn((
+            Name::new(format!("InvaderRow {row_idx}")),
+            Row,
+            SpatialBundle::from_transform(Transform::from_xyz(0.0, row_cell_y_offset, 0.0)),
+        ));
+
+        // TODO: Formula Not Accurate. Change to one that could never fail.
+        let grouping = row_idx / TYPES.len();
+        let &(invader_type, dimensions, points_worth) = TYPES
+            .get(grouping)
+            .unwrap_or_else(|| panic!("There is no Enemy Type No°{grouping}"));
+
+        for column in row {
+            let &cell::Position(Vec2 { x: column, .. }) = column;
+
+            entity.with_children(|parent| {
+                parent.spawn(Bundle::new(
+                    PointsWorth(points_worth),
+                    SpriteBundle {
+                        texture: loader.load(format!("sprites/invader_{invader_type}1.png")),
+                        transform: Transform::from_xyz(column, 0.0, 0.0),
+                        ..default()
+                    },
+                    Collider::cuboid(dimensions.x / 2.0, dimensions.y / 2.0),
+                ));
+            });
+        }
+    }
+}

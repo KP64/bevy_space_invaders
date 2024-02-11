@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 repository = "https://github.com/KP64/bevy_space_invaders"
 readme = "README.md"
-keywords = ["game", "space", "invaders", "bevy", "online", "rankings"]
+keywords = ["game", "space", "invaders", "bevy", "rankings"]
 categories = ["games"]
 description = "A Space Invaders Clone made using Bevy."
 
@@ -25,17 +25,20 @@ cargo = "warn"
 needless_pass_by_value = "allow"
 
 [dependencies]
-bevy = { version = "0.12.1", features = ["dynamic_linking"] }
+bevy = { version = "0.12.1", features = ["dynamic_linking", "file_watcher"] }
 bevy-inspector-egui = "0.22.1"
 bevy_mod_debugdump = "0.9.0"
-bevy_rapier2d = { version = "0.23.0", features = [
+bevy_rand = { version = "0.4.0", features = ["rand_chacha"] }
+bevy_rapier2d = { version = "0.24.0", features = [
     "debug-render-2d",
     "simd-stable",
     "parallel",
 ] }
 bevy_screen_diagnostics = "0.4.0"
+futures-lite = "2.2.0"
 image = "0.24.8"
 itertools = "0.12.0"
+leafwing-input-manager = "0.11.2"
 rand = "0.8.5"
 winit = "0.28.7"
 
