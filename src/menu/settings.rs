@@ -69,10 +69,10 @@ fn setup_header(parent: &mut ChildBuilder) {
             },
         )
         .with_style(Style {
-            min_width: button::MIN_WIDTH,
-            min_height: button::MIN_HEIGHT,
-            width: button::WIDTH,
-            height: button::HEIGHT,
+            min_width: button::size::MIN_WIDTH,
+            min_height: button::size::MIN_HEIGHT,
+            width: button::size::WIDTH,
+            height: button::size::HEIGHT,
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
             ..default()
@@ -87,10 +87,10 @@ fn setup_presentation_mode(parent: &mut ChildBuilder) {
             Elements::Presentation,
             ButtonBundle {
                 style: Style {
-                    min_width: button::MIN_WIDTH,
-                    min_height: button::MIN_HEIGHT,
-                    width: button::WIDTH,
-                    height: button::HEIGHT,
+                    min_width: button::size::MIN_WIDTH,
+                    min_height: button::size::MIN_HEIGHT,
+                    width: button::size::WIDTH,
+                    height: button::size::HEIGHT,
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     ..default()
@@ -132,10 +132,10 @@ fn setup_vsync(parent: &mut ChildBuilder, window: Query<&Window, With<PrimaryWin
                     Elements::Vsync,
                     ButtonBundle {
                         style: Style {
-                            min_width: button::MIN_WIDTH,
-                            min_height: button::MIN_HEIGHT,
-                            width: button::WIDTH,
-                            height: button::HEIGHT,
+                            min_width: button::size::MIN_WIDTH,
+                            min_height: button::size::MIN_HEIGHT,
+                            width: button::size::WIDTH,
+                            height: button::size::HEIGHT,
                             justify_content: JustifyContent::Center,
                             align_items: AlignItems::Center,
                             ..default()
@@ -180,10 +180,10 @@ fn setup_back(parent: &mut ChildBuilder) {
             Elements::Back,
             ButtonBundle {
                 style: Style {
-                    min_width: button::MIN_WIDTH,
-                    min_height: button::MIN_HEIGHT,
-                    width: button::WIDTH,
-                    height: button::HEIGHT,
+                    min_width: button::size::MIN_WIDTH,
+                    min_height: button::size::MIN_HEIGHT,
+                    width: button::size::WIDTH,
+                    height: button::size::HEIGHT,
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     ..default()
@@ -223,10 +223,10 @@ fn menu(
                     Elements::Sound => todo!("Sound Capabilites have not been implemented yet."),
                     Elements::Back => next_state.set(AppState::MainMenu),
                 }
-                button::PRESSED
+                button::color::PRESSED
             }
-            Interaction::Hovered => button::HOVERED,
-            Interaction::None => button::NORMAL,
+            Interaction::Hovered => button::color::HOVERED,
+            Interaction::None => button::color::NORMAL,
         }
         .into();
     }

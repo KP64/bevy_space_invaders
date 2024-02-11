@@ -72,16 +72,16 @@ fn setup_play_button(parent: &mut ChildBuilder) {
             Buttons::Play,
             ButtonBundle {
                 style: Style {
-                    min_width: button::MIN_WIDTH,
-                    min_height: button::MIN_HEIGHT,
-                    width: button::WIDTH,
-                    height: button::HEIGHT,
+                    min_width: button::size::MIN_WIDTH,
+                    min_height: button::size::MIN_HEIGHT,
+                    width: button::size::WIDTH,
+                    height: button::size::HEIGHT,
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     margin: UiRect::bottom(Val::Vh(1.0)),
                     ..default()
                 },
-                background_color: button::NORMAL.into(),
+                background_color: button::color::NORMAL.into(),
                 ..default()
             },
         ))
@@ -104,10 +104,10 @@ fn setup_settings_button(parent: &mut ChildBuilder) {
             Buttons::Settings,
             ButtonBundle {
                 style: Style {
-                    min_width: button::MIN_WIDTH,
-                    min_height: button::MIN_HEIGHT,
-                    width: button::WIDTH,
-                    height: button::HEIGHT,
+                    min_width: button::size::MIN_WIDTH,
+                    min_height: button::size::MIN_HEIGHT,
+                    width: button::size::WIDTH,
+                    height: button::size::HEIGHT,
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     margin: UiRect::bottom(Val::Vh(1.0)),
@@ -134,10 +134,10 @@ fn setup_quit_button(parent: &mut ChildBuilder) {
             Buttons::Quit,
             ButtonBundle {
                 style: Style {
-                    min_width: button::MIN_WIDTH,
-                    min_height: button::MIN_HEIGHT,
-                    width: button::WIDTH,
-                    height: button::HEIGHT,
+                    min_width: button::size::MIN_WIDTH,
+                    min_height: button::size::MIN_HEIGHT,
+                    width: button::size::WIDTH,
+                    height: button::size::HEIGHT,
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     ..default()
@@ -172,10 +172,10 @@ fn menu(
                     Buttons::Settings => next_state.set(AppState::Settings),
                     Buttons::Quit => exit.send_default(),
                 }
-                button::PRESSED
+                button::color::PRESSED
             }
-            Interaction::Hovered => button::HOVERED,
-            Interaction::None => button::NORMAL,
+            Interaction::Hovered => button::color::HOVERED,
+            Interaction::None => button::color::NORMAL,
         }
         .into();
     }
