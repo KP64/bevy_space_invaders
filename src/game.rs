@@ -13,6 +13,11 @@ mod ui;
 const ROWS: u8 = 11;
 const COLUMNS: u8 = 11;
 
+const ON_STARTUP: OnTransition<AppState> = OnTransition {
+    from: AppState::MainMenu,
+    to: AppState::Game,
+};
+
 #[derive(States, Default, Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum State {
     /// State when Player starts a new Game
@@ -33,6 +38,9 @@ pub enum State {
     LvlFinished,
 
     /// State when Player ends a game or Dies
+    GameOver,
+
+    /// State when Player exits a Game
     Exit,
 }
 
@@ -52,13 +60,7 @@ impl app::Plugin for Plugin {
                 player::Plugin,
                 enemy::Plugin,
             ))
-            .add_systems(
-                OnTransition {
-                    from: AppState::MainMenu,
-                    to: AppState::Game,
-                },
-                start_new,
-            )
+            .add_systems(ON_STARTUP, start_new)
             .add_systems(OnEnter(State::Setup), change_to_play_state)
             .add_systems(
                 Update,
