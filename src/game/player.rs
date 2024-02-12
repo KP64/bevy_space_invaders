@@ -28,7 +28,7 @@ fn reset_player(mut commands: Commands, query: Query<Entity, With<Player>>) {
 }
 
 #[derive(Component)]
-struct Player;
+pub(super) struct Player;
 
 #[derive(Bundle)]
 struct Bundle {

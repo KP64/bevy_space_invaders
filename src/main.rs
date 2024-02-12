@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"]
 #![allow(clippy::type_complexity, clippy::multiple_crate_versions)]
 
 use bevy::{

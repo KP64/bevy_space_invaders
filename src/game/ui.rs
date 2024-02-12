@@ -1,4 +1,4 @@
-use super::{cell, Level, Score, Time};
+use super::{cell, player::Player, Level, Score, Time};
 use crate::{game, get_single_mut, AppState};
 use bevy::{app, prelude::*, time};
 
@@ -38,7 +38,10 @@ struct LevelText;
 #[derive(Resource, Default, Deref, DerefMut)]
 struct UiData(Vec<Entity>);
 
-fn tick_timer((mut timer, time): (ResMut<Time>, Res<time::Time>)) {
+fn tick_timer((mut timer, time): (ResMut<Time>, Res<time::Time>), query: Query<(), With<Player>>) {
+    if query.is_empty() {
+        return;
+    }
     timer.tick(time.delta());
 }
 
