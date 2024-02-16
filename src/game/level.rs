@@ -1,5 +1,4 @@
-use crate::game;
-use crate::game::enemy::invader;
+use crate::game::{self, enemy::invader};
 use bevy::{app, prelude::*};
 use std::fmt;
 pub struct Plugin;
@@ -77,8 +76,13 @@ impl Level {
 
 impl From<Level> for Color {
     fn from(value: Level) -> Self {
-        let lvl_type = Type::from(value);
-        match lvl_type {
+        Type::from(value).into()
+    }
+}
+
+impl From<Type> for Color {
+    fn from(value: Type) -> Self {
+        match value {
             Type::Normal => Self::WHITE,
             Type::Boss => Self::CRIMSON,
             Type::Bonus => Self::GOLD,
