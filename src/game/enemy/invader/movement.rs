@@ -31,8 +31,8 @@ fn init(mut commands: Commands) {
     commands.init_resource::<direction::Next>();
 }
 
-fn cleanup(mut commands: Commands, query: Query<Entity, With<Task>>) {
-    for task in &query {
+fn cleanup(mut commands: Commands, tasks: Query<Entity, With<Task>>) {
+    for task in &tasks {
         commands.entity(task).despawn();
     }
     commands.remove_resource::<Timer>();
@@ -65,9 +65,9 @@ fn spawn_tasks(
         ResMut<Timer>,
         Res<Time>,
     ),
-    (task_query, row_query): (Query<&Task>, Query<(Entity, &Transform), With<Row>>),
+    (tasks, row_query): (Query<&Task>, Query<(Entity, &Transform), With<Row>>),
 ) {
-    if !task_query.is_empty() {
+    if !tasks.is_empty() {
         movement_timer.pause();
         movement_timer.reset();
         return;
@@ -110,8 +110,8 @@ fn spawn_tasks(
     movement_direction.next();
 }
 
-fn handle_tasks(mut commands: Commands, mut move_tasks: Query<(Entity, &mut Task)>) {
-    for (task, mut movement_task) in &mut move_tasks {
+fn handle_tasks(mut commands: Commands, mut tasks: Query<(Entity, &mut Task)>) {
+    for (task, mut movement_task) in &mut tasks {
         let Some((new_position, moving_entity)) = block_on(future::poll_once(&mut movement_task.0))
         else {
             continue;

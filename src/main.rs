@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 #![allow(clippy::type_complexity, clippy::multiple_crate_versions)]
 
 use bevy::{
@@ -72,11 +72,12 @@ fn main() {
 }
 
 #[cfg(debug_assertions)]
-fn toggle_debug_renderer(mut ctx: ResMut<DebugRenderContext>, input: Res<Input<KeyCode>>) {
+fn toggle_debug_renderer((mut ctx, input): (ResMut<DebugRenderContext>, Res<Input<KeyCode>>)) {
     if input.just_pressed(KeyCode::R) {
         ctx.enabled = !ctx.enabled;
     }
 }
+
 #[macro_export]
 macro_rules! get_single {
     ($q:expr) => {

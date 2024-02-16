@@ -1,4 +1,4 @@
-use bevy::{app, ecs, prelude::*, time::Stopwatch};
+use bevy::{app, ecs::schedule, prelude::*, time::Stopwatch};
 use bevy_rand::{plugin::EntropyPlugin, prelude::*};
 use std::fmt;
 
@@ -6,6 +6,7 @@ use crate::AppState;
 
 mod cell;
 mod enemy;
+mod level;
 mod player;
 mod projectile;
 mod ui;
@@ -49,12 +50,11 @@ pub struct Plugin;
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_state::<State>()
-            .add_event::<LevelUp>()
             .init_resource::<Board>()
-            .init_resource::<Level>()
             .init_resource::<Score>()
             .add_plugins(EntropyPlugin::<ChaCha8Rng>::default())
             .add_plugins((
+                level::Plugin,
                 ui::Plugin,
                 projectile::Plugin,
                 player::Plugin,
@@ -65,9 +65,7 @@ impl app::Plugin for Plugin {
             .add_systems(
                 Update,
                 pause.run_if(in_state(State::Playing).or_else(in_state(State::Paused))),
-            )
-            .add_systems(Update, lvl_up.run_if(in_state(State::Playing)))
-            .add_systems(OnEnter(State::LvlFinished), new_level);
+            );
     }
 }
 
@@ -75,81 +73,11 @@ fn start_new(mut next_state: ResMut<NextState<State>>) {
     next_state.set(State::Setup);
 }
 
-fn new_level(mut game_state: ResMut<NextState<State>>) {
-    game_state.set(State::Setup);
-}
-
 fn change_to_play_state(mut next_state: ResMut<NextState<State>>) {
     next_state.set(State::Playing);
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum LevelType {
-    Normal,
-    Boss,
-    Bonus,
-}
-
-impl From<Level> for LevelType {
-    fn from(value: Level) -> Self {
-        if value.0 % 10 == 0 {
-            Self::Bonus
-        } else if value.0 % 5 == 0 {
-            Self::Boss
-        } else {
-            Self::Normal
-        }
-    }
-}
-
-#[derive(Resource, Clone, Copy, Deref, DerefMut)]
-struct Level(usize);
-
-impl Default for Level {
-    fn default() -> Self {
-        Self(1)
-    }
-}
-
-impl fmt::Display for Level {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:^5}", self.0)
-    }
-}
-
-impl Level {
-    fn level_up(&mut self) {
-        self.0 += 1;
-    }
-
-    fn get_color(self) -> Color {
-        let lvl_type = LevelType::from(self);
-        match lvl_type {
-            LevelType::Normal => Color::WHITE,
-            LevelType::Boss => Color::CRIMSON,
-            LevelType::Bonus => Color::GOLD,
-        }
-    }
-}
-
-#[derive(Event, Default)]
-struct LevelUp;
-
-fn lvl_up(
-    (mut lvl, mut lvl_up_event, mut game_state): (
-        ResMut<Level>,
-        EventReader<LevelUp>,
-        ResMut<NextState<State>>,
-    ),
-) {
-    for _ in lvl_up_event.read() {
-        lvl.level_up();
-        LevelType::from(*lvl);
-        game_state.set(State::LvlFinished);
-    }
-}
-
-#[derive(Resource, Default, Deref, DerefMut)]
+#[derive(Resource, Default, Clone, Copy, Deref, DerefMut)]
 struct Score(usize);
 
 impl fmt::Display for Score {
@@ -158,13 +86,13 @@ impl fmt::Display for Score {
     }
 }
 
-impl Score {
-    const fn get_color(&self) -> Color {
-        match self.0 {
-            0..=99 => Color::WHITE,
-            100..=499 => Color::rgb(0.7, 0.7, 0.7),
-            500..=999 => Color::rgb(0.4, 0.4, 0.4),
-            _ => Color::AQUAMARINE,
+impl From<Score> for Color {
+    fn from(value: Score) -> Self {
+        match value.0 {
+            0..=99 => Self::WHITE,
+            100..=499 => Self::rgb(0.7, 0.7, 0.7),
+            500..=999 => Self::rgb(0.4, 0.4, 0.4),
+            _ => Self::AQUAMARINE,
         }
     }
 }
@@ -201,7 +129,7 @@ impl Default for Board {
 fn pause(
     (keys, state, mut next_state): (
         Res<Input<KeyCode>>,
-        Res<ecs::schedule::State<State>>,
+        Res<schedule::State<State>>,
         ResMut<NextState<State>>,
     ),
 ) {

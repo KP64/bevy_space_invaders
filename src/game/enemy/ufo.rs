@@ -32,13 +32,13 @@ impl app::Plugin for Plugin {
     }
 }
 
-fn freeze(mut query: Query<&mut Velocity, With<Ufo>>) {
-    for mut velocity in &mut query {
+fn freeze(mut velocities: Query<&mut Velocity, With<Ufo>>) {
+    for mut velocity in &mut velocities {
         *velocity = Velocity::zero();
     }
 }
-fn unfreeze(mut query: Query<&mut Velocity, With<Ufo>>) {
-    for mut velocity in &mut query {
+fn unfreeze(mut velocities: Query<&mut Velocity, With<Ufo>>) {
+    for mut velocity in &mut velocities {
         *velocity = VELOCITY;
     }
 }
@@ -97,9 +97,9 @@ struct Spawn;
 
 fn tick_timer(
     (time, mut timer, mut spawn_event): (Res<Time>, ResMut<Spawner>, EventWriter<Spawn>),
-    ufo_query: Query<(), With<Ufo>>,
+    ufos: Query<(), With<Ufo>>,
 ) {
-    if !ufo_query.is_empty() {
+    if !ufos.is_empty() {
         return;
     }
 
@@ -115,8 +115,12 @@ fn get_random_points(rng: &mut GlobalEntropy<ChaCha8Rng>) -> usize {
 
 fn spawn(
     mut commands: Commands,
-    mut rng: ResMut<GlobalEntropy<ChaCha8Rng>>,
-    (loader, game_board, mut spawn_event): (Res<AssetServer>, Res<game::Board>, EventReader<Spawn>),
+    (loader, game_board, mut spawn_event, mut rng): (
+        Res<AssetServer>,
+        Res<game::Board>,
+        EventReader<Spawn>,
+        ResMut<GlobalEntropy<ChaCha8Rng>>,
+    ),
 ) {
     let first_y_cell = game_board
         .get(1)

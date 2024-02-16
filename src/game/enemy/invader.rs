@@ -1,10 +1,10 @@
 use super::{Enemy, PointsWorth};
-use crate::game::{self, cell};
+use crate::game::{self, cell, level};
 use bevy::{app, prelude::*};
 use bevy_rapier2d::prelude::*;
 
 mod movement;
-mod shooting;
+pub mod shooting;
 
 type Type = char;
 type Dimensions = Vec2;
@@ -23,14 +23,11 @@ pub struct Plugin;
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((movement::Plugin, shooting::Plugin))
-            .add_systems(OnEnter(game::State::Setup), setup)
+            .add_systems(
+                OnEnter(game::State::Setup),
+                setup.run_if(level::Type::is_normal),
+            )
             .add_systems(OnEnter(game::State::LvlFinished), cleanup);
-    }
-}
-
-fn cleanup(mut commands: Commands, query: Query<Entity, With<Row>>) {
-    for row in &query {
-        commands.entity(row).despawn_recursive();
     }
 }
 
@@ -109,5 +106,11 @@ fn setup(mut commands: Commands, (game_board, loader): (Res<game::Board>, Res<As
                 ));
             });
         }
+    }
+}
+
+fn cleanup(mut commands: Commands, rows: Query<Entity, With<Row>>) {
+    for row in &rows {
+        commands.entity(row).despawn();
     }
 }

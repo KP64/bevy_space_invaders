@@ -18,12 +18,12 @@ fn setup(mut commands: Commands) {
 }
 
 fn change_scale(
-    (mut camera_query, window_query): (
+    (mut camera_query, window): (
         Query<&mut OrthographicProjection, With<Marker>>,
         Query<&Window, With<PrimaryWindow>>,
     ),
 ) {
-    let window = get_single!(window_query);
+    let window = get_single!(window);
 
     let w_scale = window::DIMENSIONS.x / window.width();
     let h_scale = window::DIMENSIONS.y / window.height();

@@ -9,7 +9,6 @@
       "request": "launch",
       "name": "Debug executable 'bevy_space_invaders'",
       "console": "integratedTerminal",
-      "internalConsoleOptions": "openOnSessionStart",
       "cargo": {
         "args": [
           "build",
@@ -17,7 +16,6 @@
           "--package=bevy_space_invaders"
         ],
         "env": {
-          "RUSTFLAGS": "-Clinker=rust-lld.exe",
           "PATH": "${env:USERPROFILE}/.rustup/toolchains/nightly-x86_64-pc-windows-msvc/bin;${workspaceFolder}/target/debug/deps;${env:PATH}"
         },
         "problemMatcher": "$rustc",
@@ -34,6 +32,7 @@
       "type": "lldb",
       "request": "launch",
       "name": "Debug unit tests in executable 'bevy_space_invaders'",
+      "console": "integratedTerminal",
       "cargo": {
         "args": [
           "test",
@@ -41,13 +40,18 @@
           "--bin=bevy_space_invaders",
           "--package=bevy_space_invaders"
         ],
+        "env": {
+          "PATH": "${env:USERPROFILE}/.rustup/toolchains/nightly-x86_64-pc-windows-msvc/bin;${workspaceFolder}/target/debug/deps;${env:PATH}"
+        },
+        "problemMatcher": "$rustc",
         "filter": {
           "name": "bevy_space_invaders",
           "kind": "bin"
         }
       },
       "args": [],
-      "cwd": "${workspaceFolder}"
+      "cwd": "${workspaceFolder}",
+      "sourceLanguages": ["rust"]
     }
   ]
 }

@@ -47,12 +47,11 @@ fn toggle_vsync(
 ) {
     let mut window = get_single_mut!(window);
     for _ in event.read() {
-        let present_mode = if window.present_mode == PresentMode::AutoVsync {
-            PresentMode::AutoNoVsync
-        } else {
-            PresentMode::AutoVsync
+        window.present_mode = match window.present_mode {
+            PresentMode::AutoVsync => PresentMode::AutoNoVsync,
+            PresentMode::AutoNoVsync => PresentMode::AutoVsync,
+            e => panic!("Only the Auto(No)Vsync Modes should be used! Current Mode: {e:?}"),
         };
-        window.present_mode = present_mode;
     }
 }
 

@@ -1,4 +1,4 @@
-use super::{cell, Level, Score, Time};
+use super::{cell, level::Level, Score, Time};
 use crate::{game, get_single_mut};
 use bevy::{app, prelude::*, time};
 
@@ -134,7 +134,7 @@ fn setup_score(parent: &mut ChildBuilder, res: Res<Score>) {
                 value: res.to_string(),
                 style: TextStyle {
                     font_size: FONT_SIZE,
-                    color: res.get_color(),
+                    color: Color::from(*res),
                     ..default()
                 },
             },
@@ -150,7 +150,7 @@ fn update_score(score: Res<Score>, mut query: Query<&mut Text, With<ScoreText>>)
         .get_mut(1)
         .expect("Could not get the Text Section for the Score Count");
     score_section.value = score.to_string();
-    score_section.style.color = score.get_color();
+    score_section.style.color = Color::from(*score);
 }
 
 fn cleanup(mut commands: Commands, mut menu_data: ResMut<UiData>) {

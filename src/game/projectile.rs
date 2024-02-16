@@ -120,8 +120,8 @@ fn spawn(
     }
 }
 
-fn freeze(mut query: Query<&mut Velocity, With<Projectile>>) {
-    for mut rb_velocity in &mut query {
+fn freeze(mut velocities: Query<&mut Velocity, With<Projectile>>) {
+    for mut rb_velocity in &mut velocities {
         *rb_velocity = Velocity::zero();
     }
 }

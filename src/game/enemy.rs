@@ -1,8 +1,8 @@
-use super::{LevelUp, Score};
+use super::{level::LevelUp, Score};
 
 use bevy::{app, prelude::*};
 
-mod invader;
+pub(super) mod invader;
 mod ufo;
 
 pub struct Plugin;
@@ -27,15 +27,15 @@ pub(super) struct PointsWorth(pub(super) usize);
 #[derive(Event)]
 pub(super) struct Death(pub(super) PointsWorth);
 
-fn when_hit(mut death_event: EventReader<Death>, mut score: ResMut<Score>) {
+fn when_hit((mut death_event, mut score): (EventReader<Death>, ResMut<Score>)) {
     score.0 += death_event
         .read()
         .map(|&Death(PointsWorth(points))| points)
         .sum::<usize>();
 }
 
-fn lvl_up(query: Query<(), With<Enemy>>, mut lvl_up_event: EventWriter<LevelUp>) {
-    if query.is_empty() {
+fn lvl_up(mut lvl_up_event: EventWriter<LevelUp>, enemies: Query<(), With<Enemy>>) {
+    if enemies.is_empty() {
         lvl_up_event.send_default();
     }
 }

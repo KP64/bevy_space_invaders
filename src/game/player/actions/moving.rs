@@ -41,12 +41,12 @@ fn movement(mut query: Query<(&mut Velocity, &ActionState<Action>), With<Player>
     rb_velocity.linvel = move_delta.normalize_or_zero() * SPEED;
 }
 
-fn correct_out_of_bounds(mut query: Query<&mut Transform, With<Player>>) {
-    let mut player = get_single_mut!(query);
+fn correct_out_of_bounds(mut transform_query: Query<&mut Transform, With<Player>>) {
+    let mut player = get_single_mut!(transform_query);
     player.translation.x = player.translation.x.clamp(-SIDE_WALLS, SIDE_WALLS);
 }
 
-fn reset_velocity(mut query: Query<&mut Velocity, With<Player>>) {
-    let mut rb_velocity = get_single_mut!(query);
+fn reset_velocity(mut velocity_query: Query<&mut Velocity, With<Player>>) {
+    let mut rb_velocity = get_single_mut!(velocity_query);
     *rb_velocity = Velocity::zero();
 }
