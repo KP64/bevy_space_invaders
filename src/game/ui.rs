@@ -99,7 +99,7 @@ fn setup_level(parent: &mut ChildBuilder, res: Res<Level>) {
                 value: res.to_string(),
                 style: TextStyle {
                     font_size: FONT_SIZE,
-                    color: res.get_color(),
+                    color: Color::from(*res),
                     ..default()
                 },
             },
@@ -114,7 +114,7 @@ fn update_level(level: Res<Level>, mut query: Query<&mut Text, With<LevelText>>)
         .get_mut(1)
         .expect("Could not get the Text Section for the Level Count");
     level_section.value = level.to_string();
-    level_section.style.color = level.get_color();
+    level_section.style.color = Color::from(*level);
 }
 
 fn setup_score(parent: &mut ChildBuilder, res: Res<Score>) {

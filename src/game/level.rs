@@ -73,13 +73,15 @@ impl Level {
     fn level_up(&mut self) {
         self.0 += 1;
     }
+}
 
-    pub(super) fn get_color(self) -> Color {
-        let lvl_type = Type::from(self);
+impl From<Level> for Color {
+    fn from(value: Level) -> Self {
+        let lvl_type = Type::from(value);
         match lvl_type {
-            Type::Normal => Color::WHITE,
-            Type::Boss => Color::CRIMSON,
-            Type::Bonus => Color::GOLD,
+            Type::Normal => Self::WHITE,
+            Type::Boss => Self::CRIMSON,
+            Type::Bonus => Self::GOLD,
         }
     }
 }
