@@ -1,5 +1,5 @@
 use super::{Enemy, PointsWorth};
-use crate::game::{self, cell, level};
+use crate::game::{self, level};
 use bevy::{app, prelude::*};
 use bevy_rapier2d::prelude::*;
 
@@ -29,6 +29,12 @@ impl app::Plugin for Plugin {
             )
             .add_systems(OnEnter(game::State::LvlFinished), cleanup);
     }
+}
+
+fn get_type(grouping: usize) -> (char, Vec2, usize) {
+    *TYPES
+        .get(grouping)
+        .unwrap_or_else(|| panic!("There is no Enemy Type No°{grouping}"))
 }
 
 #[derive(Component)]
@@ -75,31 +81,27 @@ fn setup(mut commands: Commands, (game_board, loader): (Res<game::Board>, Res<As
         .skip(ROWS_TO_SKIP)
         .take(ROWS_TO_POPULATE)
     {
-        let row_cell_y_offset = row
+        let row_y_offset = row
             .first()
             .unwrap_or_else(|| panic!("Could not get the first Cellposition of row {row_idx}"))
             .y;
         let mut entity = commands.spawn((
             Name::new(format!("InvaderRow {row_idx}")),
             Row,
-            SpatialBundle::from_transform(Transform::from_xyz(0.0, row_cell_y_offset, 0.0)),
+            SpatialBundle::from_transform(Transform::from_xyz(0.0, row_y_offset, 0.0)),
         ));
 
         // TODO: Formula Not Accurate. Change to one that could never fail.
-        let grouping = row_idx / TYPES.len();
-        let &(invader_type, dimensions, points_worth) = TYPES
-            .get(grouping)
-            .unwrap_or_else(|| panic!("There is no Enemy Type No°{grouping}"));
+        let group = row_idx / TYPES.len();
+        let (invader_type, dimensions, points_worth) = get_type(group);
 
         for column in row {
-            let &cell::Position(Vec2 { x: column, .. }) = column;
-
             entity.with_children(|parent| {
                 parent.spawn(Bundle::new(
                     PointsWorth(points_worth),
                     SpriteBundle {
                         texture: loader.load(format!("sprites/invader_{invader_type}1.png")),
-                        transform: Transform::from_xyz(column, 0.0, 0.0),
+                        transform: Transform::from_xyz(column.x, 0.0, 0.0),
                         ..default()
                     },
                     Collider::cuboid(dimensions.x / 2.0, dimensions.y / 2.0),

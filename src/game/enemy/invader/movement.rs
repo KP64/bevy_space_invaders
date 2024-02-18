@@ -7,7 +7,7 @@ use bevy::{
     time,
 };
 use futures_lite::future;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 mod direction;
 
@@ -78,31 +78,18 @@ fn spawn_tasks(
         return;
     }
 
-    let thread_pool = AsyncComputeTaskPool::get();
+    let task_pool = AsyncComputeTaskPool::get();
     let direction = movement_direction.to_vec2();
 
-    for (entity, translation, delay) in
-        row_query
-            .iter()
-            .zip(MOVE_DELAYS)
-            .map(|((entity, transform), delay)| {
-                (
-                    entity,
-                    transform.translation,
-                    Duration::from_secs_f32(delay),
-                )
-            })
-    {
-        let row = commands.entity(entity).id();
-        let task = thread_pool.spawn(async move {
-            let start_time = Instant::now();
+    for ((entity, &transform), delay) in row_query.iter().zip(MOVE_DELAYS) {
+        let row_id = commands.entity(entity).id();
 
-            // TODO: Replace with std::thread::sleep(duration) ?
-            while start_time.elapsed() < delay {}
+        let task = task_pool.spawn(async move {
+            std::thread::sleep(Duration::from_secs_f32(delay));
 
             (
-                Transform::from_translation(translation + direction.extend(0.0)),
-                row,
+                Transform::from_translation(transform.translation + direction.extend(0.0)),
+                row_id,
             )
         });
         commands.spawn((Name::new("Invader Movement Task"), Task(task)));

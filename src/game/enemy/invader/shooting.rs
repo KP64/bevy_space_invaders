@@ -48,17 +48,16 @@ fn shoot(
     ),
     query: Query<(&Timer, &GlobalTransform), With<Enemy>>,
 ) {
-    for (_, transform) in query
+    let to_spawn = query
         .iter()
         .filter(|(timer, _)| timer.finished() && rng.gen_bool(res.0))
-    {
-        projectile_spawn_event.send(projectile::Spawn {
+        .map(|(_, glob_transform)| projectile::Spawn {
             velocity: Velocity::linear(Vec2::new(0.0, -400.0)),
             collision_target_groups: CollisionGroups::new(
                 Group::GROUP_4,
                 Group::GROUP_1 | Group::GROUP_3,
             ),
-            transform: transform.compute_transform(),
+            transform: glob_transform.compute_transform(),
         });
-    }
+    projectile_spawn_event.send_batch(to_spawn);
 }
