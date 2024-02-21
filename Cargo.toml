@@ -16,6 +16,8 @@ pedantic = "warn"
 nursery = "warn"
 cargo = "warn"
 needless_pass_by_value = { level = "allow", priority = 1 }
+type_complexity = { level = "allow", priority = 1 }
+multiple_crate_versions = { level = "allow", priority = 1 }
 
 [dependencies]
 bevy = { version = "0.13", features = ["dynamic_linking"] }
