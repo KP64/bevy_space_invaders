@@ -110,8 +110,8 @@ fn spawn(
                 velocity,
                 collision_target_groups,
                 MaterialMesh2dBundle {
-                    mesh: meshes.add(shape::Quad::new(DIMENSIONS).into()).into(),
-                    material: materials.add(Color::rgb_u8(64, 224, 240).into()),
+                    mesh: meshes.add(Rectangle::from_size(DIMENSIONS)).into(),
+                    material: materials.add(Color::rgb_u8(64, 224, 240)),
                     transform,
                     ..default()
                 },
@@ -153,7 +153,9 @@ fn check_hit(
         }
 
         match (coll_group_1.memberships, coll_group_2.memberships) {
-            (Group::GROUP_1, _) | (_, Group::GROUP_1) => player_death.send(player::Death),
+            (Group::GROUP_1, _) | (_, Group::GROUP_1) => {
+                player_death.send(player::Death);
+            }
             (Group::GROUP_2, _) | (_, Group::GROUP_2) => {
                 let score = match (point1, point2) {
                     (None, Some(p)) | (Some(p), None) => p.0,

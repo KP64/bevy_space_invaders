@@ -1,8 +1,9 @@
+use crate::{get_single, AppState};
 use bevy::{app, ecs::schedule, prelude::*, time::Stopwatch};
-use bevy_rand::{plugin::EntropyPlugin, prelude::*};
+use bevy_rand::prelude::*;
+use leafwing_input_manager::prelude::*;
+use player::actions::Action;
 use std::fmt;
-
-use crate::AppState;
 
 mod cell;
 mod enemy;
@@ -49,7 +50,7 @@ pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_state::<State>()
+        app.init_state::<State>()
             .init_resource::<Board>()
             .init_resource::<Score>()
             .add_plugins(EntropyPlugin::<ChaCha8Rng>::default())
@@ -127,13 +128,11 @@ impl Default for Board {
 }
 
 fn pause(
-    (keys, state, mut next_state): (
-        Res<Input<KeyCode>>,
-        Res<schedule::State<State>>,
-        ResMut<NextState<State>>,
-    ),
+    (state, mut next_state): (Res<schedule::State<State>>, ResMut<NextState<State>>),
+    input: Query<&ActionState<Action>>,
 ) {
-    if !keys.just_pressed(KeyCode::P) {
+    let input = get_single!(input);
+    if !input.just_pressed(&Action::TogglePause) {
         return;
     }
 

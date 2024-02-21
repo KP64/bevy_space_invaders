@@ -48,7 +48,7 @@ fn shoot(
 ) {
     let (&transform, action_state) = get_single!(query);
 
-    if !action_state.just_pressed(Action::Shoot) {
+    if !action_state.just_pressed(&Action::Shoot) {
         return;
     }
 

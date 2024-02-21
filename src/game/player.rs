@@ -5,7 +5,7 @@ use bevy::{app, prelude::*};
 use bevy_rapier2d::prelude::*;
 use leafwing_input_manager::InputManagerBundle;
 
-mod actions;
+pub mod actions;
 
 const DIMENSIONS: Vec2 = Vec2::new(26.0, 16.0);
 

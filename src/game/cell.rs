@@ -1,6 +1,5 @@
-use crate::window;
-
 use super::{COLUMNS, ROWS};
+use crate::window;
 use bevy::prelude::*;
 
 pub(super) const DIMENSIONS: Vec2 = Vec2::new(

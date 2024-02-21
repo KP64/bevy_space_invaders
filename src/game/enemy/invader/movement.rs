@@ -3,10 +3,9 @@ use crate::game::{self};
 use bevy::{
     app,
     prelude::*,
-    tasks::{self, block_on, AsyncComputeTaskPool},
+    tasks::{self, block_on, poll_once, AsyncComputeTaskPool},
     time,
 };
-use futures_lite::future;
 use std::time::Duration;
 
 mod direction;
@@ -85,6 +84,7 @@ fn spawn_tasks(
         let row_id = commands.entity(entity).id();
 
         let task = task_pool.spawn(async move {
+            // FIXME: Task ticks "sleep timer" further even if game is game::state::Paused
             std::thread::sleep(Duration::from_secs_f32(delay));
 
             (
@@ -99,8 +99,7 @@ fn spawn_tasks(
 
 fn handle_tasks(mut commands: Commands, mut tasks: Query<(Entity, &mut Task)>) {
     for (task, mut movement_task) in &mut tasks {
-        let Some((new_position, moving_entity)) = block_on(future::poll_once(&mut movement_task.0))
-        else {
+        let Some((new_position, moving_entity)) = block_on(poll_once(&mut movement_task.0)) else {
             continue;
         };
 

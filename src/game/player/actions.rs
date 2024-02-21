@@ -14,7 +14,7 @@ impl app::Plugin for Plugin {
 }
 
 #[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]
-pub(super) enum Action {
+pub enum Action {
     Left,
     Right,
     Shoot,
@@ -26,18 +26,18 @@ impl Action {
         let mut input_map = InputMap::default();
 
         // * MOVEMENT - START
-        input_map.insert_many_to_one([KeyCode::Left, KeyCode::A], Self::Left);
-        input_map.insert(GamepadButtonType::DPadLeft, Self::Left);
+        input_map.insert_one_to_many(Self::Left, [KeyCode::ArrowLeft, KeyCode::KeyA]);
+        input_map.insert(Self::Left, GamepadButtonType::DPadLeft);
 
-        input_map.insert_many_to_one([KeyCode::Right, KeyCode::D], Self::Right);
-        input_map.insert(GamepadButtonType::DPadRight, Self::Right);
+        input_map.insert_one_to_many(Self::Right, [KeyCode::ArrowRight, KeyCode::KeyD]);
+        input_map.insert(Self::Right, GamepadButtonType::DPadRight);
         // * MOVEMENT - END
 
-        input_map.insert(KeyCode::Space, Self::Shoot);
-        input_map.insert(GamepadButtonType::RightTrigger2, Self::Shoot);
+        input_map.insert(Self::Shoot, KeyCode::Space);
+        input_map.insert(Self::Shoot, GamepadButtonType::RightTrigger2);
 
-        input_map.insert(KeyCode::P, Self::TogglePause);
-        input_map.insert(GamepadButtonType::Select, Self::TogglePause);
+        input_map.insert(Self::TogglePause, KeyCode::KeyP);
+        input_map.insert(Self::TogglePause, GamepadButtonType::Select);
 
         input_map
     }

@@ -170,7 +170,9 @@ fn menu(
                 match button_type {
                     Buttons::Play => next_state.set(AppState::Game),
                     Buttons::Settings => next_state.set(AppState::Settings),
-                    Buttons::Quit => exit.send_default(),
+                    Buttons::Quit => {
+                        exit.send_default();
+                    }
                 }
                 button::color::PRESSED
             }

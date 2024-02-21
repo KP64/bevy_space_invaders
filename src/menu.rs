@@ -1,6 +1,5 @@
-use bevy::{app, prelude::*};
-
 use crate::AppState;
+use bevy::{app, prelude::*};
 
 mod button;
 mod home;

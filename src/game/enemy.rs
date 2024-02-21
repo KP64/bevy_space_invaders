@@ -1,5 +1,4 @@
 use super::{level::LevelUp, Score};
-
 use bevy::{app, prelude::*};
 
 pub(super) mod invader;

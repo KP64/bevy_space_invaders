@@ -35,6 +35,7 @@ fn main() {
             .set(LogPlugin {
                 level: log::Level::DEBUG,
                 filter: "info,wgpu_core=warn,wgpu_hal=warn,bevy_space_invaders=debug".into(),
+                ..default()
             })
             .set(WindowPlugin {
                 primary_window: Some(Window {
@@ -61,7 +62,7 @@ fn main() {
         bevy_mod_debugdump::print_schedule_graph(&mut app, Update);
     }
 
-    app.add_state::<AppState>().add_plugins((
+    app.init_state::<AppState>().add_plugins((
         window::Plugin,
         camera::Plugin,
         menu::Plugin,
@@ -72,8 +73,10 @@ fn main() {
 }
 
 #[cfg(debug_assertions)]
-fn toggle_debug_renderer((mut ctx, input): (ResMut<DebugRenderContext>, Res<Input<KeyCode>>)) {
-    if input.just_pressed(KeyCode::R) {
+fn toggle_debug_renderer(
+    (mut ctx, input): (ResMut<DebugRenderContext>, Res<ButtonInput<KeyCode>>),
+) {
+    if input.just_pressed(KeyCode::KeyR) {
         ctx.enabled = !ctx.enabled;
     }
 }

@@ -218,8 +218,12 @@ fn menu(
         *color = match *interaction {
             Interaction::Pressed => {
                 match element_type {
-                    Elements::Presentation => fullscreen.send(window::Fullscreen),
-                    Elements::Vsync => vsync_toggle.send(window::VsyncToggle),
+                    Elements::Presentation => {
+                        fullscreen.send(window::Fullscreen);
+                    }
+                    Elements::Vsync => {
+                        vsync_toggle.send(window::VsyncToggle);
+                    }
                     Elements::Sound => todo!("Sound Capabilites have not been implemented yet."),
                     Elements::Back => next_state.set(AppState::MainMenu),
                 }

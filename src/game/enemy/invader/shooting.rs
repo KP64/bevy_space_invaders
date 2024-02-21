@@ -1,10 +1,9 @@
+use self::probability::Probability;
 use crate::game::{self, enemy::Enemy, projectile};
 use bevy::{app, prelude::*, time};
 use bevy_rand::{prelude::ChaCha8Rng, resource::GlobalEntropy};
 use bevy_rapier2d::prelude::*;
 use rand::Rng;
-
-use self::probability::Probability;
 
 pub mod probability;
 
