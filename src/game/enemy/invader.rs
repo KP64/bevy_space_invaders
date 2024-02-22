@@ -1,6 +1,7 @@
 use super::{Enemy, PointsWorth};
 use crate::game::{self, level};
 use bevy::{app, prelude::*};
+use bevy_rand::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 mod movement;
@@ -45,6 +46,7 @@ struct Bundle {
     enemy: Enemy,
     points: PointsWorth,
     shooting_timer: shooting::Timer,
+    shooting_entropy: EntropyComponent<ChaCha8Rng>,
     sprite: SpriteBundle,
     rigidbody: RigidBody,
     velocity: Velocity,
@@ -61,6 +63,7 @@ impl Bundle {
             enemy: Enemy,
             points,
             shooting_timer: shooting::Timer::default(),
+            shooting_entropy: EntropyComponent::<ChaCha8Rng>::default(),
             sprite,
             rigidbody: RigidBody::KinematicPositionBased,
             velocity: Velocity::zero(),

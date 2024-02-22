@@ -13,6 +13,7 @@ struct Entities(Vec<Entity>);
 
 pub struct Plugin;
 
+// TODO: Rework all GUI
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Entities>()
