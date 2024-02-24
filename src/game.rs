@@ -15,16 +15,16 @@ mod ui;
 const ROWS: u8 = 11;
 const COLUMNS: u8 = 11;
 
-const ON_STARTUP: OnTransition<AppState> = OnTransition {
+const ON_ENTER: OnTransition<AppState> = OnTransition {
     from: AppState::MainMenu,
     to: AppState::Game,
 };
 
 #[derive(States, Default, Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum State {
-    /// State when Player starts a new Game
+    /// Empty State without any Logic
     #[default]
-    Started,
+    Empty,
 
     /// State when a Level Should be Constructed
     Setup,
@@ -61,11 +61,11 @@ impl app::Plugin for Plugin {
                 player::Plugin,
                 enemy::Plugin,
             ))
-            .add_systems(ON_STARTUP, start_new)
-            .add_systems(OnEnter(State::Setup), change_to_play_state)
+            .add_systems(ON_ENTER, start_new)
+            .add_systems(OnEnter(State::Setup), to_play_state)
             .add_systems(
                 Update,
-                pause.run_if(in_state(State::Playing).or_else(in_state(State::Paused))),
+                toggle_pause.run_if(in_state(State::Playing).or_else(in_state(State::Paused))),
             );
     }
 }
@@ -74,7 +74,7 @@ fn start_new(mut next_state: ResMut<NextState<State>>) {
     next_state.set(State::Setup);
 }
 
-fn change_to_play_state(mut next_state: ResMut<NextState<State>>) {
+fn to_play_state(mut next_state: ResMut<NextState<State>>) {
     next_state.set(State::Playing);
 }
 
@@ -103,7 +103,7 @@ struct Time(Stopwatch);
 
 impl fmt::Display for Time {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let time = self.0.elapsed().as_secs();
+        let time = self.elapsed().as_secs();
         let (minutes, seconds) = (time / 60, time % 60);
 
         write!(f, "{minutes:02}:{seconds:02}")
@@ -127,7 +127,7 @@ impl Default for Board {
     }
 }
 
-fn pause(
+fn toggle_pause(
     (state, mut next_state): (Res<schedule::State<State>>, ResMut<NextState<State>>),
     input: Query<&ActionState<Action>>,
 ) {

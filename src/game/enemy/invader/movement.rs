@@ -21,7 +21,7 @@ impl app::Plugin for Plugin {
                 Update,
                 (spawn_tasks, handle_tasks).run_if(in_state(game::State::Playing)),
             )
-            .add_systems(OnEnter(game::State::LvlFinished), cleanup);
+            .add_systems(OnEnter(game::State::LvlFinished), reset);
     }
 }
 
@@ -30,7 +30,7 @@ fn init(mut commands: Commands) {
     commands.init_resource::<direction::Next>();
 }
 
-fn cleanup(mut commands: Commands, tasks: Query<Entity, With<Task>>) {
+fn reset(mut commands: Commands, tasks: Query<Entity, With<Task>>) {
     for task in &tasks {
         commands.entity(task).despawn();
     }

@@ -16,12 +16,12 @@ impl app::Plugin for Plugin {
         app.add_event::<Death>()
             .add_plugins(actions::Plugin)
             .add_systems(OnEnter(game::State::Setup), setup)
-            .add_systems(Update, when_hit.run_if(in_state(game::State::Playing)))
-            .add_systems(OnEnter(game::State::LvlFinished), reset_player);
+            .add_systems(Update, on_hit.run_if(in_state(game::State::Playing)))
+            .add_systems(OnEnter(game::State::LvlFinished), despawn);
     }
 }
 
-fn reset_player(mut commands: Commands, query: Query<Entity, With<Player>>) {
+fn despawn(mut commands: Commands, query: Query<Entity, With<Player>>) {
     for player in &query {
         commands.entity(player).despawn();
     }
@@ -83,9 +83,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 #[derive(Event)]
 pub(super) struct Death;
 
-fn when_hit(
-    (mut death_event, mut game_state): (EventReader<Death>, ResMut<NextState<game::State>>),
-) {
+fn on_hit((mut death_event, mut game_state): (EventReader<Death>, ResMut<NextState<game::State>>)) {
     for _ in death_event.read() {
         game_state.set(game::State::GameOver);
     }

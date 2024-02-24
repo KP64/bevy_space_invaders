@@ -10,6 +10,8 @@ use rand::Rng;
 use std::cmp::Ordering;
 
 const DIMENSIONS: Vec2 = Vec2::new(48.0, 21.0);
+
+// TODO: Make Velocity.x Random sign (+ || -)?
 const VELOCITY: Velocity = Velocity::linear(Vec2::new(200.0, 0.0));
 
 const POINTS: [usize; 5] = [50, 100, 150, 200, 300];
@@ -25,7 +27,7 @@ impl app::Plugin for Plugin {
             .init_resource::<Spawner>()
             .add_systems(
                 Update,
-                (tick_timer, spawn, despawn_out_of_window).run_if(in_state(game::State::Playing)),
+                (tick_spawner, spawn, despawn_out_of_window).run_if(in_state(game::State::Playing)),
             )
             .add_systems(OnEnter(game::State::Paused), freeze)
             .add_systems(OnExit(game::State::Paused), unfreeze);
@@ -95,15 +97,15 @@ impl Default for Spawner {
 #[derive(Event, Default)]
 struct Spawn;
 
-fn tick_timer(
-    (time, mut timer, mut spawn_event): (Res<Time>, ResMut<Spawner>, EventWriter<Spawn>),
+fn tick_spawner(
+    (time, mut spawner, mut spawn_event): (Res<Time>, ResMut<Spawner>, EventWriter<Spawn>),
     ufos: Query<(), With<Ufo>>,
 ) {
     if !ufos.is_empty() {
         return;
     }
 
-    if timer.tick(time.delta()).just_finished() {
+    if spawner.tick(time.delta()).just_finished() {
         spawn_event.send_default();
     }
 }

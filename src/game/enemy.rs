@@ -12,7 +12,7 @@ impl app::Plugin for Plugin {
             .add_plugins((invader::Plugin, ufo::Plugin))
             .add_systems(
                 Update,
-                (when_hit, lvl_up).run_if(in_state(super::State::Playing)),
+                (on_hit, lvl_up).run_if(in_state(super::State::Playing)),
             );
     }
 }
@@ -26,7 +26,7 @@ pub(super) struct PointsWorth(pub(super) usize);
 #[derive(Event)]
 pub(super) struct Death(pub(super) PointsWorth);
 
-fn when_hit((mut death_event, mut score): (EventReader<Death>, ResMut<Score>)) {
+fn on_hit((mut death_event, mut score): (EventReader<Death>, ResMut<Score>)) {
     score.0 += death_event
         .read()
         .map(|&Death(PointsWorth(points))| points)

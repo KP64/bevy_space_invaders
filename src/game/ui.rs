@@ -10,7 +10,7 @@ impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<UiData>()
             .init_resource::<Time>()
-            .add_systems(game::ON_STARTUP, setup)
+            .add_systems(game::ON_ENTER, setup)
             .add_systems(
                 Update,
                 (tick_timer, update_time, update_score, update_level)

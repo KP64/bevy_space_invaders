@@ -45,7 +45,7 @@ struct Row;
 struct Bundle {
     enemy: Enemy,
     points: PointsWorth,
-    shooting_timer: shooting::Timer,
+    shooting_cooldown: shooting::Cooldown,
     shooting_entropy: EntropyComponent<ChaCha8Rng>,
     sprite: SpriteBundle,
     rigidbody: RigidBody,
@@ -62,7 +62,7 @@ impl Bundle {
         Self {
             enemy: Enemy,
             points,
-            shooting_timer: shooting::Timer::default(),
+            shooting_cooldown: shooting::Cooldown::default(),
             shooting_entropy: EntropyComponent::<ChaCha8Rng>::default(),
             sprite,
             rigidbody: RigidBody::KinematicPositionBased,

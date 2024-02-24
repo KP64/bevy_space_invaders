@@ -7,7 +7,7 @@ impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_event::<LevelUp>()
             .init_resource::<Level>()
-            .add_systems(Update, lvl_up.run_if(in_state(game::State::Playing)))
+            .add_systems(Update, on_lvl_up.run_if(in_state(game::State::Playing)))
             .add_systems(OnEnter(game::State::LvlFinished), new_level);
     }
 }
@@ -93,7 +93,7 @@ impl From<Type> for Color {
 #[derive(Event, Default)]
 pub(super) struct LevelUp;
 
-fn lvl_up(
+fn on_lvl_up(
     (mut lvl_up_event, mut lvl, mut probability, mut game_state): (
         EventReader<LevelUp>,
         ResMut<Level>,

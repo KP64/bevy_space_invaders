@@ -165,7 +165,7 @@ fn menu(
     >,
 ) {
     for (interaction, mut color, button_type) in &mut interaction_query {
-        *color = match *interaction {
+        *color = match interaction {
             Interaction::Pressed => {
                 match button_type {
                     Buttons::Play => next_state.set(AppState::Game),

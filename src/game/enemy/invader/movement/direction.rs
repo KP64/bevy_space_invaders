@@ -36,6 +36,7 @@ pub(super) struct Next {
     #[deref]
     pub(super) direction: Direction,
 }
+
 impl Default for Next {
     fn default() -> Self {
         Self {

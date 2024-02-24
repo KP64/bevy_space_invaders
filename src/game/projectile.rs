@@ -20,12 +20,12 @@ impl app::Plugin for Plugin {
         app.add_event::<Spawn>()
             .add_event::<Collision>()
             .add_systems(OnEnter(game::State::Paused), freeze)
+            .add_systems(OnExit(game::State::Paused), unfreeze)
             .add_systems(
                 Update,
-                (despawn_out_of_window, spawn, check_hit, when_hit)
+                (despawn_out_of_window, spawn, check_collisions, on_hit)
                     .run_if(in_state(game::State::Playing)),
-            )
-            .add_systems(OnExit(game::State::Paused), unfreeze);
+            );
     }
 }
 
@@ -132,7 +132,7 @@ fn unfreeze(mut query: Query<(&mut Velocity, &Projectile)>) {
     }
 }
 
-fn check_hit(
+fn check_collisions(
     mut commands: Commands,
     (rapier_context, mut player_death, mut enemy_death, mut projectile_collision_event): (
         Res<RapierContext>,
@@ -175,7 +175,7 @@ fn check_hit(
     }
 }
 
-fn when_hit(mut collisions: EventReader<Collision>) {
+fn on_hit(mut collisions: EventReader<Collision>) {
     for _ in collisions.read() {
         info!("Projectile Projectile Hit");
     }

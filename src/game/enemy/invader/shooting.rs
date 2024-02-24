@@ -1,6 +1,6 @@
 use self::probability::Probability;
 use crate::game::{self, enemy::Enemy, projectile};
-use bevy::{app, prelude::*, time};
+use bevy::{app, prelude::*};
 use bevy_rand::prelude::*;
 use bevy_rapier2d::prelude::*;
 use rand::Rng;
@@ -15,23 +15,23 @@ impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Probability>().add_systems(
             Update,
-            (tick_timer, shoot).run_if(in_state(game::State::Playing)),
+            (tick_cooldown, shoot).run_if(in_state(game::State::Playing)),
         );
     }
 }
 
-fn tick_timer(time: Res<Time>, mut timers: Query<&mut Timer>) {
-    for mut timer in &mut timers {
-        timer.tick(time.delta());
+fn tick_cooldown(time: Res<Time>, mut timers: Query<&mut Cooldown>) {
+    for mut cooldown in &mut timers {
+        cooldown.tick(time.delta());
     }
 }
 
 #[derive(Component, Deref, DerefMut)]
-pub(super) struct Timer(time::Timer);
+pub(super) struct Cooldown(Timer);
 
-impl Default for Timer {
+impl Default for Cooldown {
     fn default() -> Self {
-        Self(time::Timer::from_seconds(
+        Self(Timer::from_seconds(
             rand::random::<f32>().mul_add(7.0, SECONDS_TILL_SPAWN),
             TimerMode::Repeating,
         ))
@@ -40,7 +40,14 @@ impl Default for Timer {
 
 fn shoot(
     (mut projectile_spawn_event, res): (EventWriter<projectile::Spawn>, Res<Probability>),
-    mut query: Query<(&Timer, &mut EntropyComponent<ChaCha8Rng>, &GlobalTransform), With<Enemy>>,
+    mut query: Query<
+        (
+            &Cooldown,
+            &mut EntropyComponent<ChaCha8Rng>,
+            &GlobalTransform,
+        ),
+        With<Enemy>,
+    >,
 ) {
     let to_spawn = query
         .iter_mut()

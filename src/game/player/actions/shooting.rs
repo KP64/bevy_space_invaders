@@ -7,7 +7,7 @@ use crate::{
     },
     get_single,
 };
-use bevy::{app, prelude::*, time};
+use bevy::{app, prelude::*};
 use bevy_rapier2d::prelude::*;
 use leafwing_input_manager::prelude::*;
 use std::time::Duration;
@@ -18,7 +18,7 @@ pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Timer>().add_systems(
+        app.init_resource::<Cooldown>().add_systems(
             Update,
             (tick_timer, shoot).run_if(in_state(game::State::Playing)),
         );
@@ -26,24 +26,24 @@ impl app::Plugin for Plugin {
 }
 
 #[derive(Resource, Deref, DerefMut)]
-struct Timer(time::Timer);
+struct Cooldown(Timer);
 
-impl Default for Timer {
+impl Default for Cooldown {
     fn default() -> Self {
         let duration = Duration::from_secs_f32(SECONDS_TO_SHOOT);
-        let mut timer = time::Timer::new(duration, TimerMode::Once);
+        let mut timer = Timer::new(duration, TimerMode::Once);
         timer.tick(duration);
 
         Self(timer)
     }
 }
 
-fn tick_timer((time, mut timer): (Res<Time>, ResMut<Timer>)) {
+fn tick_timer((time, mut timer): (Res<Time>, ResMut<Cooldown>)) {
     timer.tick(time.delta());
 }
 
 fn shoot(
-    (mut projectile_spawn_event, mut shoot_timer): (EventWriter<projectile::Spawn>, ResMut<Timer>),
+    (mut projectile_spawn_event, mut cooldown): (EventWriter<projectile::Spawn>, ResMut<Cooldown>),
     query: Query<(&Transform, &ActionState<Action>), With<Player>>,
 ) {
     let (&transform, action_state) = get_single!(query);
@@ -52,7 +52,7 @@ fn shoot(
         return;
     }
 
-    if !shoot_timer.finished() {
+    if !cooldown.finished() {
         return;
     }
 
@@ -71,5 +71,5 @@ fn shoot(
         ),
         transform,
     });
-    shoot_timer.reset();
+    cooldown.reset();
 }
