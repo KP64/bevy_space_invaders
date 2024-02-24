@@ -69,7 +69,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         Name::new("Player"),
         Bundle::new(SpriteBundle {
-            texture: asset_server.load("sprites/Player.png"),
+            texture: asset_server.load("sprites/player.png"),
             transform: Transform::from_xyz(
                 0.0,
                 -window::DIMENSIONS.y / 2.0 + cell::DIMENSIONS.y,

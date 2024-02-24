@@ -88,7 +88,7 @@ fn setup_level(parent: &mut ChildBuilder, res: Res<Level>) {
         LevelText,
         TextBundle::from_sections([
             TextSection {
-                value: "Level\n".to_string(),
+                value: "Level ".into(), // TODO: Add newline when Bevy fixes Text Artifacts
                 style: TextStyle {
                     font_size: FONT_SIZE,
                     color: Color::WHITE,
@@ -123,7 +123,7 @@ fn setup_score(parent: &mut ChildBuilder, res: Res<Score>) {
         ScoreText,
         TextBundle::from_sections([
             TextSection {
-                value: "Score\n".to_string(),
+                value: "Score ".into(), // TODO: Add newline when Bevy fixes Text Artifacts
                 style: TextStyle {
                     font_size: FONT_SIZE,
                     color: Color::WHITE,

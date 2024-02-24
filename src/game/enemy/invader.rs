@@ -103,7 +103,7 @@ fn setup(mut commands: Commands, (game_board, loader): (Res<game::Board>, Res<As
                 parent.spawn(Bundle::new(
                     PointsWorth(points_worth),
                     SpriteBundle {
-                        texture: loader.load(format!("sprites/invader_{invader_type}1.png")),
+                        texture: loader.load(format!("sprites/invaders/{invader_type}1.png")),
                         transform: Transform::from_xyz(column.x, 0.0, 0.0),
                         ..default()
                     },

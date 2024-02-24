@@ -134,7 +134,7 @@ fn spawn(
             Bundle::new(
                 PointsWorth(get_random_points(&mut rng)),
                 SpriteBundle {
-                    texture: loader.load("sprites/UFO.png"),
+                    texture: loader.load("sprites/ufo.png"),
                     transform: Transform::from_xyz(-X_OFFSET, first_y_cell, 0.0),
                     ..default()
                 },
