@@ -7,7 +7,7 @@ use crate::{
     },
     get_single,
 };
-use bevy::{app, prelude::*};
+use bevy::{app, audio, prelude::*};
 use bevy_rapier2d::prelude::*;
 use leafwing_input_manager::prelude::*;
 use std::time::Duration;
@@ -43,7 +43,12 @@ fn tick_timer((time, mut timer): (Res<Time>, ResMut<Cooldown>)) {
 }
 
 fn shoot(
-    (mut projectile_spawn_event, mut cooldown): (EventWriter<projectile::Spawn>, ResMut<Cooldown>),
+    mut commands: Commands,
+    (asset_server, mut projectile_spawn_event, mut cooldown): (
+        Res<AssetServer>,
+        EventWriter<projectile::Spawn>,
+        ResMut<Cooldown>,
+    ),
     query: Query<(&Transform, &ActionState<Action>), With<Player>>,
 ) {
     let (&transform, action_state) = get_single!(query);
@@ -71,5 +76,17 @@ fn shoot(
         ),
         transform,
     });
+
+    commands.spawn((
+        Name::new("Player Shooting Sound"),
+        AudioBundle {
+            source: asset_server.load("sounds/player/shoot.wav"),
+            settings: PlaybackSettings {
+                mode: audio::PlaybackMode::Despawn,
+                ..default()
+            },
+        },
+    ));
+
     cooldown.reset();
 }

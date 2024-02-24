@@ -1,5 +1,5 @@
 use super::{level::LevelUp, Score};
-use bevy::{app, prelude::*};
+use bevy::{app, audio, prelude::*};
 
 pub(super) mod invader;
 mod ufo;
@@ -26,10 +26,29 @@ pub(super) struct PointsWorth(pub(super) usize);
 #[derive(Event)]
 pub(super) struct Death(pub(super) PointsWorth);
 
-fn on_hit((mut death_event, mut score): (EventReader<Death>, ResMut<Score>)) {
+fn on_hit(
+    mut commands: Commands,
+    (asset_server, mut death_event, mut score): (
+        Res<AssetServer>,
+        EventReader<Death>,
+        ResMut<Score>,
+    ),
+) {
     score.0 += death_event
         .read()
-        .map(|&Death(PointsWorth(points))| points)
+        .map(|&Death(PointsWorth(points))| {
+            commands.spawn((
+                Name::new("Enemy Dying Sound"),
+                AudioBundle {
+                    source: asset_server.load("sounds/invaders/killed.wav"),
+                    settings: PlaybackSettings {
+                        mode: audio::PlaybackMode::Despawn,
+                        ..default()
+                    },
+                },
+            ));
+            points
+        })
         .sum::<usize>();
 }
 

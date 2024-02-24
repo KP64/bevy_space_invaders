@@ -1,7 +1,7 @@
 use super::cell;
 use crate::{game, window};
 use actions::Action;
-use bevy::{app, prelude::*};
+use bevy::{app, audio, prelude::*};
 use bevy_rapier2d::prelude::*;
 use leafwing_input_manager::InputManagerBundle;
 
@@ -83,8 +83,25 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 #[derive(Event)]
 pub(super) struct Death;
 
-fn on_hit((mut death_event, mut game_state): (EventReader<Death>, ResMut<NextState<game::State>>)) {
+fn on_hit(
+    mut commands: Commands,
+    (asset_server, mut death_event, mut game_state): (
+        Res<AssetServer>,
+        EventReader<Death>,
+        ResMut<NextState<game::State>>,
+    ),
+) {
     for _ in death_event.read() {
+        commands.spawn((
+            Name::new("Player Dying Sound"),
+            AudioBundle {
+                source: asset_server.load("sounds/player/explosion.wav"),
+                settings: PlaybackSettings {
+                    mode: audio::PlaybackMode::Despawn,
+                    ..default()
+                },
+            },
+        ));
         game_state.set(game::State::GameOver);
     }
 }

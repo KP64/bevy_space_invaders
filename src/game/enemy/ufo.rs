@@ -3,7 +3,7 @@ use crate::{
     game::{self, enemy::Enemy},
     window,
 };
-use bevy::{app, prelude::*};
+use bevy::{app, audio, prelude::*};
 use bevy_rand::prelude::*;
 use bevy_rapier2d::prelude::*;
 use rand::Rng;
@@ -117,7 +117,7 @@ fn get_random_points(rng: &mut GlobalEntropy<ChaCha8Rng>) -> usize {
 
 fn spawn(
     mut commands: Commands,
-    (loader, game_board, mut spawn_event, mut rng): (
+    (asset_server, game_board, mut spawn_event, mut rng): (
         Res<AssetServer>,
         Res<game::Board>,
         EventReader<Spawn>,
@@ -136,11 +136,18 @@ fn spawn(
             Bundle::new(
                 PointsWorth(get_random_points(&mut rng)),
                 SpriteBundle {
-                    texture: loader.load("sprites/ufo.png"),
+                    texture: asset_server.load("sprites/ufo.png"),
                     transform: Transform::from_xyz(-X_OFFSET, first_y_cell, 0.0),
                     ..default()
                 },
             ),
+            AudioBundle {
+                source: asset_server.load("sounds/ufo/highpitch.wav"),
+                settings: PlaybackSettings {
+                    mode: audio::PlaybackMode::Loop,
+                    ..default()
+                },
+            },
         ));
     }
 }
