@@ -7,14 +7,14 @@ use bevy_rapier2d::prelude::*;
 mod movement;
 pub mod shooting;
 
-type Type = char;
+type Type = &'static str;
 type Dimensions = Vec2;
 type Points = usize;
 
 const TYPES: [(Type, Dimensions, Points); 3] = [
-    ('A', Vec2::new(16.0, 16.0), 30),
-    ('B', Vec2::new(22.0, 16.0), 20),
-    ('C', Vec2::new(24.0, 16.0), 10),
+    ("squid", Vec2::new(16.0, 16.0), 30),
+    ("crab", Vec2::new(22.0, 16.0), 20),
+    ("octopus", Vec2::new(24.0, 16.0), 10),
 ];
 const ROWS_TO_POPULATE: usize = 5;
 const ROWS_TO_SKIP: usize = 2;
@@ -32,7 +32,7 @@ impl app::Plugin for Plugin {
     }
 }
 
-fn get_type(grouping: usize) -> (char, Vec2, usize) {
+fn get_type(grouping: usize) -> (&'static str, Vec2, usize) {
     *TYPES
         .get(grouping)
         .unwrap_or_else(|| panic!("There is no Enemy Type No°{grouping}"))
@@ -103,7 +103,7 @@ fn setup(mut commands: Commands, (game_board, loader): (Res<game::Board>, Res<As
                 parent.spawn(Bundle::new(
                     PointsWorth(points_worth),
                     SpriteBundle {
-                        texture: loader.load(format!("sprites/invaders/{invader_type}1.png")),
+                        texture: loader.load(format!("sprites/invaders/{invader_type}_1.png")),
                         transform: Transform::from_xyz(column.x, 0.0, 0.0),
                         ..default()
                     },
