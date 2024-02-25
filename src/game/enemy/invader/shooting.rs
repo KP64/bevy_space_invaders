@@ -8,6 +8,7 @@ use rand::Rng;
 pub mod probability;
 
 const SECONDS_TILL_SPAWN: f32 = 1.5;
+const MAX_XTRA_SECONDS_TILL_SPAWN: f32 = 7.0;
 
 pub struct Plugin;
 
@@ -31,8 +32,10 @@ pub(super) struct Cooldown(Timer);
 
 impl Default for Cooldown {
     fn default() -> Self {
+        // TODO: Replace Timer after each shot?
+        // ? For Guidance: Look at the ufo::Spawner
         Self(Timer::from_seconds(
-            rand::random::<f32>().mul_add(7.0, SECONDS_TILL_SPAWN),
+            rand::random::<f32>().mul_add(MAX_XTRA_SECONDS_TILL_SPAWN, SECONDS_TILL_SPAWN),
             TimerMode::Repeating,
         ))
     }

@@ -17,17 +17,30 @@ const VELOCITY: Velocity = Velocity::linear(Vec2::new(200.0, 0.0));
 const POINTS: [usize; 5] = [50, 100, 150, 200, 300];
 
 const X_OFFSET: f32 = window::DIMENSIONS.x / 2.0 + DIMENSIONS.x;
-const SECONDS_TILL_SPAWN: f32 = 5.0;
+const SECONDS_TILL_SPAWN: f32 = 10.0;
+const MAX_XTRA_SECONDS_TILL_SPAWN: f32 = 8.0;
 
 pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_event::<Spawn>()
-            .init_resource::<Spawner>()
             .add_systems(
                 Update,
-                (tick_spawner, spawn, despawn_out_of_window).run_if(in_state(game::State::Playing)),
+                spawn_spawner.run_if(
+                    resource_exists::<Spawner>
+                        .map(|d| !d)
+                        .and_then(in_state(game::State::Playing)),
+                ),
+            )
+            .add_systems(
+                Update,
+                tick_spawner
+                    .run_if(resource_exists::<Spawner>.and_then(in_state(game::State::Playing))),
+            )
+            .add_systems(
+                Update,
+                (spawn, despawn_out_of_window).run_if(in_state(game::State::Playing)),
             )
             .add_systems(OnEnter(game::State::Paused), freeze)
             .add_systems(OnExit(game::State::Paused), unfreeze);
@@ -85,19 +98,23 @@ impl Bundle {
 #[derive(Resource, Deref, DerefMut)]
 struct Spawner(Timer);
 
-impl Default for Spawner {
-    fn default() -> Self {
+impl Spawner {
+    fn with_extra(seconds: f32) -> Self {
         Self(Timer::from_seconds(
-            SECONDS_TILL_SPAWN,
-            TimerMode::Repeating,
+            SECONDS_TILL_SPAWN + seconds,
+            TimerMode::Once,
         ))
     }
 }
 
-#[derive(Event, Default)]
-struct Spawn;
+fn spawn_spawner(mut commands: Commands, mut rng: ResMut<GlobalEntropy<ChaCha8Rng>>) {
+    commands.insert_resource(Spawner::with_extra(
+        rng.gen::<f32>() * MAX_XTRA_SECONDS_TILL_SPAWN,
+    ));
+}
 
 fn tick_spawner(
+    mut commands: Commands,
     (time, mut spawner, mut spawn_event): (Res<Time>, ResMut<Spawner>, EventWriter<Spawn>),
     ufos: Query<(), With<Ufo>>,
 ) {
@@ -107,6 +124,7 @@ fn tick_spawner(
 
     if spawner.tick(time.delta()).just_finished() {
         spawn_event.send_default();
+        commands.remove_resource::<Spawner>();
     }
 }
 
@@ -114,6 +132,9 @@ fn get_random_points(rng: &mut GlobalEntropy<ChaCha8Rng>) -> usize {
     let idx = rng.gen_range(0..POINTS.len());
     POINTS[idx]
 }
+
+#[derive(Event, Default)]
+struct Spawn;
 
 fn spawn(
     mut commands: Commands,
