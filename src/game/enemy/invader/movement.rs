@@ -1,4 +1,4 @@
-use super::Row;
+use super::Invader;
 use crate::game::{self};
 use bevy::{
     app,
@@ -52,10 +52,8 @@ impl Default for Timer {
 #[derive(Component, Deref, DerefMut)]
 struct Task(tasks::Task<(Transform, Entity)>);
 
-/// The Movement Delays of each Invader `Row`
-/// going from top to bottom.
-/// The bottom Rows will Move first
-const MOVE_DELAYS: [f32; 5] = [0.8, 0.6, 0.4, 0.2, 0.0];
+#[derive(Component, Clone, Copy, Deref, DerefMut)]
+pub(super) struct Delay(pub(super) f32);
 
 fn spawn_tasks(
     mut commands: Commands,
@@ -64,7 +62,10 @@ fn spawn_tasks(
         ResMut<Timer>,
         Res<Time>,
     ),
-    (tasks, row_query): (Query<&Task>, Query<(Entity, &Transform), With<Row>>),
+    (tasks, row_query): (
+        Query<&Task>,
+        Query<(Entity, &Transform, &Delay), With<Invader>>,
+    ),
 ) {
     if !tasks.is_empty() {
         movement_timer.pause();
@@ -80,16 +81,15 @@ fn spawn_tasks(
     let task_pool = AsyncComputeTaskPool::get();
     let direction = movement_direction.to_vec2();
 
-    for ((entity, &transform), delay) in row_query.iter().zip(MOVE_DELAYS) {
-        let row_id = commands.entity(entity).id();
-
+    for (entity, &transform, &delay) in &row_query {
+        let invader_id = commands.entity(entity).id();
         let task = task_pool.spawn(async move {
             // FIXME: Task ticks "sleep timer" further even if game is game::state::Paused
-            std::thread::sleep(Duration::from_secs_f32(delay));
+            std::thread::sleep(Duration::from_secs_f32(delay.0));
 
             (
                 Transform::from_translation(transform.translation + direction.extend(0.0)),
-                row_id,
+                invader_id,
             )
         });
         commands.spawn((Name::new("Invader Movement Task"), Task(task)));
@@ -103,7 +103,9 @@ fn handle_tasks(mut commands: Commands, mut tasks: Query<(Entity, &mut Task)>) {
             continue;
         };
 
-        commands.entity(moving_entity).insert(new_position);
+        if let Some(mut moving_entity) = commands.get_entity(moving_entity) {
+            moving_entity.insert(new_position);
+        }
         commands.entity(task).despawn();
     }
 }

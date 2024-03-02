@@ -3,6 +3,7 @@ use crate::game::{self, level};
 use bevy::{app, prelude::*};
 use bevy_rand::prelude::*;
 use bevy_rapier2d::prelude::*;
+use movement::Delay;
 
 mod movement;
 pub mod shooting;
@@ -27,8 +28,7 @@ impl app::Plugin for Plugin {
             .add_systems(
                 OnEnter(game::State::Setup),
                 setup.run_if(level::Type::is_normal),
-            )
-            .add_systems(OnEnter(game::State::LvlFinished), cleanup);
+            );
     }
 }
 
@@ -38,13 +38,12 @@ fn get_type(grouping: usize) -> (&'static str, Vec2, usize) {
         .unwrap_or_else(|| panic!("There is no Enemy Type No°{grouping}"))
 }
 
-#[derive(Component)]
-struct Row;
-
 #[derive(Bundle)]
 struct Bundle {
     enemy: Enemy,
+    invader: Invader,
     points: PointsWorth,
+    delay: Delay,
     shooting_cooldown: shooting::Cooldown,
     shooting_entropy: EntropyComponent<ChaCha8Rng>,
     sprite: SpriteBundle,
@@ -58,10 +57,12 @@ struct Bundle {
 }
 
 impl Bundle {
-    fn new(points: PointsWorth, sprite: SpriteBundle, collider: Collider) -> Self {
+    fn new(points: PointsWorth, delay: Delay, sprite: SpriteBundle, collider: Collider) -> Self {
         Self {
             enemy: Enemy,
+            invader: Invader,
             points,
+            delay,
             shooting_cooldown: shooting::Cooldown::default(),
             shooting_entropy: EntropyComponent::<ChaCha8Rng>::default(),
             sprite,
@@ -77,45 +78,42 @@ impl Bundle {
     }
 }
 
+#[derive(Component)]
+struct Invader;
+
 fn setup(mut commands: Commands, (game_board, loader): (Res<game::Board>, Res<AssetServer>)) {
     for (row_idx, row) in game_board
         .iter()
-        .enumerate()
         .skip(ROWS_TO_SKIP)
         .take(ROWS_TO_POPULATE)
+        .enumerate()
     {
         let row_y_offset = row
             .first()
             .unwrap_or_else(|| panic!("Could not get the first Cellposition of row {row_idx}"))
             .y;
-        let mut entity = commands.spawn((
-            Name::new(format!("InvaderRow {row_idx}")),
-            Row,
-            SpatialBundle::from_transform(Transform::from_xyz(0.0, row_y_offset, 0.0)),
-        ));
 
         // TODO: Formula Not Accurate. Change to one that could never fail.
-        let group = row_idx / TYPES.len();
+        let group = row_idx / TYPES.len() % 3;
         let (invader_type, dimensions, points_worth) = get_type(group);
 
-        for column in row {
-            entity.with_children(|parent| {
-                parent.spawn(Bundle::new(
+        for (col_idx, column) in row.iter().enumerate() {
+            commands.spawn((
+                Name::new(format!("Invader {row_idx}:{col_idx}")),
+                Bundle::new(
                     PointsWorth(points_worth),
+                    // TODO: Find Formula or alternative Solution for chaotic movement.
+                    // ? Top Left => Invader 0:0
+                    // ? Bottom Right => Invader 4:10
+                    Delay(0.05 * (row_idx + col_idx / 2) as f32),
                     SpriteBundle {
                         texture: loader.load(format!("sprites/invaders/{invader_type}_1.png")),
-                        transform: Transform::from_xyz(column.x, 0.0, 0.0),
+                        transform: Transform::from_xyz(column.x, row_y_offset, 0.0),
                         ..default()
                     },
                     Collider::cuboid(dimensions.x / 2.0, dimensions.y / 2.0),
-                ));
-            });
+                ),
+            ));
         }
-    }
-}
-
-fn cleanup(mut commands: Commands, rows: Query<Entity, With<Row>>) {
-    for row in &rows {
-        commands.entity(row).despawn();
     }
 }
