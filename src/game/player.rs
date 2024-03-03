@@ -15,7 +15,7 @@ impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_event::<Death>()
             .add_plugins(actions::Plugin)
-            .add_systems(OnEnter(game::State::Setup), setup)
+            .add_systems(OnEnter(game::State::LvlStartup), setup)
             .add_systems(Update, on_hit.run_if(in_state(game::State::Playing)))
             .add_systems(OnEnter(game::State::LvlFinished), despawn);
     }

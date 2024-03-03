@@ -7,13 +7,14 @@ impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_event::<LevelUp>()
             .init_resource::<Level>()
+            .add_systems(OnEnter(game::State::Setup), new_level)
             .add_systems(Update, on_lvl_up.run_if(in_state(game::State::Playing)))
             .add_systems(OnEnter(game::State::LvlFinished), new_level);
     }
 }
 
 fn new_level(mut game_state: ResMut<NextState<game::State>>) {
-    game_state.set(game::State::Setup);
+    game_state.set(game::State::LvlStartup);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

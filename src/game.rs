@@ -15,11 +15,6 @@ mod ui;
 const ROWS: u8 = 11;
 const COLUMNS: u8 = 11;
 
-const ON_ENTER: OnTransition<AppState> = OnTransition {
-    from: AppState::MainMenu,
-    to: AppState::Game,
-};
-
 #[derive(States, Default, Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum State {
     /// Empty State without any Logic
@@ -29,18 +24,21 @@ pub enum State {
     /// State when a Level Should be Constructed
     Setup,
 
+    /// State when Level should be Played
+    LvlStartup,
+
     /// State when Player is in the middle of a game
     Playing,
-
-    /// State when the game is Paused
-    /// Can only be triggered when `InGame`
-    Paused,
 
     /// State when a Level has been finished
     LvlFinished,
 
     /// State when Player ends a game or Dies
     GameOver,
+
+    /// State when the game is Paused
+    /// Can only be triggered when `InGame`
+    Paused,
 
     /// State when Player exits a Game
     Exit,
@@ -61,8 +59,14 @@ impl app::Plugin for Plugin {
                 player::Plugin,
                 enemy::Plugin,
             ))
-            .add_systems(ON_ENTER, start_new)
-            .add_systems(OnEnter(State::Setup), to_play_state)
+            .add_systems(
+                OnTransition {
+                    from: AppState::MainMenu,
+                    to: AppState::Game,
+                },
+                start_new,
+            )
+            .add_systems(OnEnter(State::LvlStartup), to_play_state)
             .add_systems(
                 Update,
                 toggle_pause.run_if(in_state(State::Playing).or_else(in_state(State::Paused))),

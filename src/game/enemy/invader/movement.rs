@@ -16,7 +16,7 @@ pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(game::State::Setup), init)
+        app.add_systems(OnEnter(game::State::LvlStartup), init)
             .add_systems(
                 Update,
                 (spawn_tasks, handle_tasks).run_if(in_state(game::State::Playing)),

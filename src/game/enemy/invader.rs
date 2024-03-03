@@ -26,7 +26,7 @@ impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((movement::Plugin, shooting::Plugin))
             .add_systems(
-                OnEnter(game::State::Setup),
+                OnEnter(game::State::LvlStartup),
                 setup.run_if(level::Type::is_normal),
             );
     }
