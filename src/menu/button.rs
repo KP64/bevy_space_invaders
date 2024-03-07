@@ -1,4 +1,4 @@
-pub(super) mod color {
+pub mod color {
     use bevy::prelude::*;
 
     pub const NORMAL: Color = Color::rgb(0.15, 0.15, 0.15);
@@ -6,7 +6,7 @@ pub(super) mod color {
     pub const PRESSED: Color = Color::rgb(0.35, 0.75, 0.35);
 }
 
-pub(super) mod size {
+pub mod size {
     use bevy::prelude::*;
 
     pub const MIN_WIDTH: Val = Val::Px(175.0);

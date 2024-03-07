@@ -21,7 +21,7 @@ impl app::Plugin for Plugin {
     }
 }
 
-fn setup(mut commands: Commands, mut menu_data: ResMut<super::Entities>) {
+fn setup(mut commands: Commands, mut menu_data: ResMut<super::GuiData>) {
     let entity = commands
         .spawn((
             Name::new("Home Menu Node"),
@@ -168,7 +168,7 @@ fn menu(
         *color = match interaction {
             Interaction::Pressed => {
                 match button_type {
-                    Buttons::Play => next_state.set(AppState::Game),
+                    Buttons::Play => next_state.set(AppState::InGame),
                     Buttons::Settings => next_state.set(AppState::Settings),
                     Buttons::Quit => {
                         exit.send_default();

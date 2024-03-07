@@ -28,7 +28,14 @@ impl app::Plugin for Plugin {
             .add_systems(
                 OnEnter(game::State::LvlStartup),
                 setup.run_if(level::Type::is_normal),
-            );
+            )
+            .add_systems(OnEnter(game::State::GameOver), cleanup);
+    }
+}
+
+fn cleanup(mut commands: Commands, invaders: Query<Entity, With<Invader>>) {
+    for invader in &invaders {
+        commands.entity(invader).despawn_recursive();
     }
 }
 

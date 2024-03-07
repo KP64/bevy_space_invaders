@@ -8,6 +8,7 @@ use std::fmt;
 mod cell;
 mod enemy;
 mod level;
+mod menu;
 mod player;
 mod projectile;
 mod ui;
@@ -37,7 +38,7 @@ pub enum State {
     GameOver,
 
     /// State when the game is Paused
-    /// Can only be triggered when `InGame`
+    /// Can only be triggered when Playing
     Paused,
 
     /// State when Player exits a Game
@@ -55,6 +56,7 @@ impl app::Plugin for Plugin {
             .add_plugins((
                 level::Plugin,
                 ui::Plugin,
+                menu::Plugin,
                 projectile::Plugin,
                 player::Plugin,
                 enemy::Plugin,
@@ -62,7 +64,7 @@ impl app::Plugin for Plugin {
             .add_systems(
                 OnTransition {
                     from: AppState::MainMenu,
-                    to: AppState::Game,
+                    to: AppState::InGame,
                 },
                 start_new,
             )

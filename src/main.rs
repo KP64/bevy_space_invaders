@@ -15,7 +15,7 @@ mod window;
 
 #[derive(States, Debug, Clone, Copy, Default, Eq, PartialEq, Hash)]
 enum AppState {
-    /// State when the app is Started & is not InGame
+    /// State when the app is Started and is not `InGame`
     #[default]
     MainMenu,
 
@@ -23,7 +23,7 @@ enum AppState {
     Settings,
 
     /// State when in a Game
-    Game,
+    InGame,
 }
 
 fn main() {

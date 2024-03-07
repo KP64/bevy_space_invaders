@@ -1,4 +1,4 @@
-use super::{button, Entities, FONT_SIZE, TEXT_COLOR};
+use super::{button, GuiData, FONT_SIZE, TEXT_COLOR};
 use crate::{get_single, get_single_mut, window, AppState};
 use bevy::{app, prelude::*, window::PrimaryWindow};
 
@@ -26,7 +26,7 @@ enum Elements {
 
 fn setup(
     mut commands: Commands,
-    mut menu_data: ResMut<Entities>,
+    mut menu_data: ResMut<GuiData>,
     window: Query<&Window, With<PrimaryWindow>>,
 ) {
     let node = commands
