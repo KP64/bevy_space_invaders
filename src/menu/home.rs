@@ -17,7 +17,7 @@ enum Buttons {
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(AppState::MainMenu), setup)
-            .add_systems(Update, menu.run_if(in_state(AppState::MainMenu)));
+            .add_systems(Update, home.run_if(in_state(AppState::MainMenu)));
     }
 }
 
@@ -157,7 +157,7 @@ fn setup_quit_button(parent: &mut ChildBuilder) {
         });
 }
 
-fn menu(
+fn home(
     (mut next_state, mut exit): (ResMut<NextState<AppState>>, EventWriter<AppExit>),
     mut interaction_query: Query<
         (&Interaction, &mut BackgroundColor, &Buttons),

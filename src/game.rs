@@ -22,7 +22,7 @@ pub enum State {
     #[default]
     Empty,
 
-    /// State when a Level Should be Constructed
+    /// State when a new Game is started
     Setup,
 
     /// State when Level should be Played
