@@ -1,8 +1,8 @@
-use crate::{get_single_mut, AppState};
+use crate::AppState;
 use bevy::{
     app,
     prelude::*,
-    window::{close_on_esc, PresentMode, PrimaryWindow, WindowMode},
+    window::{PresentMode, PrimaryWindow, WindowMode},
     winit::WinitWindows,
 };
 use winit::window::Icon;
@@ -22,7 +22,7 @@ impl app::Plugin for Plugin {
         app.add_event::<Fullscreen>()
             .add_event::<VsyncToggle>()
             .add_systems(Startup, set_window_icon)
-            .add_systems(Update, (close_on_esc, toggle_vsync))
+            .add_systems(Update, toggle_vsync)
             .add_systems(Update, fullscreen.run_if(in_state(AppState::Settings)));
     }
 }
@@ -32,7 +32,7 @@ fn fullscreen(
     mut window: Query<&mut Window, With<PrimaryWindow>>,
 ) {
     for _ in event.read() {
-        let mut window = get_single_mut!(window);
+        let mut window = window.single_mut();
         window.mode = if window.mode == WindowMode::Windowed {
             WindowMode::Fullscreen
         } else {
@@ -45,7 +45,7 @@ fn toggle_vsync(
     mut event: EventReader<VsyncToggle>,
     mut window: Query<&mut Window, With<PrimaryWindow>>,
 ) {
-    let mut window = get_single_mut!(window);
+    let mut window = window.single_mut();
     for _ in event.read() {
         window.present_mode = match window.present_mode {
             PresentMode::AutoVsync => PresentMode::AutoNoVsync,

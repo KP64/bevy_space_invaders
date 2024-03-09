@@ -1,4 +1,4 @@
-use crate::{get_single, AppState};
+use crate::AppState;
 use bevy::{app, ecs::schedule, prelude::*, time::Stopwatch};
 use bevy_rand::prelude::*;
 use leafwing_input_manager::prelude::*;
@@ -51,7 +51,6 @@ impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.init_state::<State>()
             .init_resource::<Board>()
-            .init_resource::<Score>()
             .add_plugins(EntropyPlugin::<ChaCha8Rng>::default())
             .add_plugins((
                 level::Plugin,
@@ -68,6 +67,7 @@ impl app::Plugin for Plugin {
                 },
                 start_new,
             )
+            .add_systems(OnEnter(State::Setup), setup)
             .add_systems(OnEnter(State::LvlStartup), to_play_state)
             .add_systems(
                 Update,
@@ -78,6 +78,10 @@ impl app::Plugin for Plugin {
 
 fn start_new(mut next_state: ResMut<NextState<State>>) {
     next_state.set(State::Setup);
+}
+
+fn setup(mut commands: Commands) {
+    commands.insert_resource(Score::default());
 }
 
 fn to_play_state(mut next_state: ResMut<NextState<State>>) {
@@ -137,7 +141,7 @@ fn toggle_pause(
     (state, mut next_state): (Res<schedule::State<State>>, ResMut<NextState<State>>),
     input: Query<&ActionState<Action>>,
 ) {
-    let input = get_single!(input);
+    let input = input.single();
     if !input.just_pressed(&Action::TogglePause) {
         return;
     }

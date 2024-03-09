@@ -1,5 +1,5 @@
 use super::{cell, level::Level, Score, Time};
-use crate::{game, get_single_mut};
+use crate::game;
 use bevy::{app, prelude::*, time};
 
 pub struct Plugin;
@@ -10,7 +10,7 @@ impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<UiData>()
             .init_resource::<Time>()
-            .add_systems(OnEnter(game::State::Setup), setup)
+            .add_systems(OnEnter(game::State::Setup), (cleanup, setup).chain())
             .add_systems(
                 Update,
                 (tick_timer, update_time, update_score, update_level)
@@ -40,6 +40,7 @@ fn setup(
     mut commands: Commands,
     (mut ui_data, score, level, time): (ResMut<UiData>, Res<Score>, Res<Level>, Res<Time>),
 ) {
+    commands.insert_resource(Time::default());
     let ui_entity = commands
         .spawn((
             Name::new("Game UI Node"),
@@ -78,7 +79,7 @@ fn setup_time(parent: &mut ChildBuilder, res: Res<Time>) {
 }
 
 fn update_time(res: Res<Time>, mut query: Query<&mut Text, With<TimeText>>) {
-    let mut time_text = get_single_mut!(query);
+    let mut time_text = query.single_mut();
     time_text.sections[0].value = res.to_string();
 }
 
@@ -107,7 +108,7 @@ fn setup_level(parent: &mut ChildBuilder, res: Res<Level>) {
     ));
 }
 fn update_level(level: Res<Level>, mut query: Query<&mut Text, With<LevelText>>) {
-    let mut level_text = get_single_mut!(query);
+    let mut level_text = query.single_mut();
 
     let level_section = level_text
         .sections
@@ -143,7 +144,7 @@ fn setup_score(parent: &mut ChildBuilder, res: Res<Score>) {
 }
 
 fn update_score(score: Res<Score>, mut query: Query<&mut Text, With<ScoreText>>) {
-    let mut score_text = get_single_mut!(query);
+    let mut score_text = query.single_mut();
 
     let score_section = score_text
         .sections

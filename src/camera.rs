@@ -1,4 +1,4 @@
-use crate::{get_single, get_single_mut, window};
+use crate::window;
 use bevy::{app, prelude::*, render::camera::ScalingMode, window::PrimaryWindow};
 
 pub struct Plugin;
@@ -23,12 +23,12 @@ fn change_scale(
         Query<&Window, With<PrimaryWindow>>,
     ),
 ) {
-    let window = get_single!(window);
+    let window = window.single();
 
     let w_scale = window::DIMENSIONS.x / window.width();
     let h_scale = window::DIMENSIONS.y / window.height();
     let final_scale = w_scale.max(h_scale);
 
-    let mut projection = get_single_mut!(camera_query);
+    let mut projection = camera_query.single_mut();
     projection.scaling_mode = ScalingMode::WindowSize(1.0 / final_scale);
 }

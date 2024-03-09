@@ -4,7 +4,7 @@ use crate::{
         self,
         player::{self, Player},
     },
-    get_single_mut, window,
+    window,
 };
 use bevy::{app, prelude::*};
 use bevy_rapier2d::prelude::*;
@@ -26,7 +26,7 @@ impl app::Plugin for Plugin {
 }
 
 fn movement(mut query: Query<(&mut Velocity, &ActionState<Action>), With<Player>>) {
-    let (mut rb_velocity, action_state) = get_single_mut!(query);
+    let (mut rb_velocity, action_state) = query.single_mut();
 
     let move_delta = action_state
         .get_pressed()
@@ -42,11 +42,11 @@ fn movement(mut query: Query<(&mut Velocity, &ActionState<Action>), With<Player>
 }
 
 fn correct_out_of_bounds(mut transform_query: Query<&mut Transform, With<Player>>) {
-    let mut player = get_single_mut!(transform_query);
+    let mut player = transform_query.single_mut();
     player.translation.x = player.translation.x.clamp(-SIDE_WALLS, SIDE_WALLS);
 }
 
 fn reset_velocity(mut velocity_query: Query<&mut Velocity, With<Player>>) {
-    let mut rb_velocity = get_single_mut!(velocity_query);
+    let mut rb_velocity = velocity_query.single_mut();
     *rb_velocity = Velocity::zero();
 }

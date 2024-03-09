@@ -76,14 +76,24 @@ fn setup_header(parent: &mut ChildBuilder) {
 fn setup_score(parent: &mut ChildBuilder, res: Res<game::Score>) {
     parent.spawn((
         Name::new("Score"),
-        TextBundle::from_section(
-            format!("Score: {}", res.0),
-            TextStyle {
-                font_size: FONT_SIZE,
-                color: Color::WHITE,
-                ..default()
+        TextBundle::from_sections([
+            TextSection {
+                value: "Score: ".to_string(),
+                style: TextStyle {
+                    font_size: FONT_SIZE,
+                    color: TEXT_COLOR,
+                    ..default()
+                },
             },
-        ),
+            TextSection {
+                value: res.to_string(),
+                style: TextStyle {
+                    font_size: FONT_SIZE,
+                    color: Color::from(*res),
+                    ..default()
+                },
+            },
+        ]),
     ));
 }
 

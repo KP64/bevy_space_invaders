@@ -25,7 +25,8 @@ impl app::Plugin for Plugin {
                 Update,
                 (despawn_out_of_window, spawn, check_collisions, on_hit)
                     .run_if(in_state(game::State::Playing)),
-            );
+            )
+            .add_systems(OnEnter(game::State::GameOver), cleanup);
     }
 }
 
@@ -196,6 +197,12 @@ fn despawn_out_of_window(
         .map(|(projectile, transform)| (projectile, transform.translation.y))
         .filter(|(_, y_pos)| !WINDOW_RANGE.contains(y_pos))
     {
+        commands.entity(projectile).despawn();
+    }
+}
+
+fn cleanup(mut commands: Commands, projectiles: Query<Entity, With<Projectile>>) {
+    for projectile in &projectiles {
         commands.entity(projectile).despawn();
     }
 }

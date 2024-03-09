@@ -21,16 +21,16 @@ impl app::Plugin for Plugin {
                 Update,
                 (spawn_tasks, handle_tasks).run_if(in_state(game::State::Playing)),
             )
-            .add_systems(OnEnter(game::State::LvlFinished), reset);
+            .add_systems(OnEnter(game::State::LvlFinished), cleanup);
     }
 }
 
 fn init(mut commands: Commands) {
-    commands.init_resource::<Timer>();
-    commands.init_resource::<direction::Next>();
+    commands.insert_resource(Timer::default());
+    commands.insert_resource(direction::Next::default());
 }
 
-fn reset(mut commands: Commands, tasks: Query<Entity, With<Task>>) {
+fn cleanup(mut commands: Commands, tasks: Query<Entity, With<Task>>) {
     for task in &tasks {
         commands.entity(task).despawn();
     }

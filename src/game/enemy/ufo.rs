@@ -43,7 +43,8 @@ impl app::Plugin for Plugin {
                 (spawn, despawn_out_of_window).run_if(in_state(game::State::Playing)),
             )
             .add_systems(OnEnter(game::State::Paused), freeze)
-            .add_systems(OnExit(game::State::Paused), unfreeze);
+            .add_systems(OnExit(game::State::Paused), unfreeze)
+            .add_systems(OnEnter(game::State::GameOver), cleanup);
     }
 }
 
@@ -52,6 +53,7 @@ fn freeze(mut velocities: Query<&mut Velocity, With<Ufo>>) {
         *velocity = Velocity::zero();
     }
 }
+
 fn unfreeze(mut velocities: Query<&mut Velocity, With<Ufo>>) {
     for mut velocity in &mut velocities {
         *velocity = VELOCITY;
@@ -195,4 +197,11 @@ fn despawn_out_of_window(
             }
         }
     }
+}
+
+fn cleanup(mut commands: Commands, ufos: Query<Entity, With<Ufo>>) {
+    for ufo in &ufos {
+        commands.entity(ufo).despawn();
+    }
+    commands.remove_resource::<Spawner>();
 }

@@ -1,4 +1,3 @@
-use self::probability::Probability;
 use crate::game::{self, enemy::Enemy, projectile};
 use bevy::{app, prelude::*};
 use bevy_rand::prelude::*;
@@ -14,10 +13,31 @@ pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Probability>().add_systems(
-            Update,
-            (tick_cooldown, shoot).run_if(in_state(game::State::Playing)),
-        );
+        app.add_systems(OnEnter(game::State::Setup), setup)
+            .add_systems(
+                Update,
+                (tick_cooldown, shoot).run_if(in_state(game::State::Playing)),
+            );
+    }
+}
+
+fn setup(mut commands: Commands) {
+    commands.insert_resource(Probability::default());
+}
+
+#[derive(Resource, Deref, DerefMut)]
+pub struct Probability(pub f64);
+
+impl Default for Probability {
+    fn default() -> Self {
+        Self(probability::LOWEST)
+    }
+}
+
+impl Probability {
+    pub fn increase(&mut self) {
+        let new_prob = self.0 + probability::INCREMENT_RATE;
+        self.0 = new_prob.clamp(probability::LOWEST, probability::HIGHEST);
     }
 }
 

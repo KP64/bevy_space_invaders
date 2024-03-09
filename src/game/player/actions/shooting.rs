@@ -1,11 +1,8 @@
 use super::Action;
-use crate::{
-    game::{
-        self,
-        player::{self, Player},
-        projectile,
-    },
-    get_single,
+use crate::game::{
+    self,
+    player::{self, Player},
+    projectile,
 };
 use bevy::{app, audio, prelude::*};
 use bevy_rapier2d::prelude::*;
@@ -18,11 +15,17 @@ pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Cooldown>().add_systems(
-            Update,
-            (tick_timer, shoot).run_if(in_state(game::State::Playing)),
-        );
+        app.init_resource::<Cooldown>()
+            .add_systems(OnEnter(game::State::LvlStartup), setup)
+            .add_systems(
+                Update,
+                (tick_timer, shoot).run_if(in_state(game::State::Playing)),
+            );
     }
+}
+
+fn setup(mut commands: Commands) {
+    commands.insert_resource(Cooldown::default());
 }
 
 #[derive(Resource, Deref, DerefMut)]
@@ -51,7 +54,7 @@ fn shoot(
     ),
     query: Query<(&Transform, &ActionState<Action>), With<Player>>,
 ) {
-    let (&transform, action_state) = get_single!(query);
+    let (&transform, action_state) = query.single();
 
     if !action_state.just_pressed(&Action::Shoot) {
         return;

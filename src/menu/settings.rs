@@ -1,5 +1,5 @@
 use super::{button, GuiData, FONT_SIZE, TEXT_COLOR};
-use crate::{get_single, get_single_mut, window, AppState};
+use crate::{window, AppState};
 use bevy::{app, prelude::*, window::PrimaryWindow};
 
 mod vsync;
@@ -155,7 +155,7 @@ fn setup_vsync(parent: &mut ChildBuilder, window: Query<&Window, With<PrimaryWin
                 });
         })
         .with_children(|parent| {
-            let window = get_single!(window);
+            let window = window.single();
             let vsync::Config { text, color } = vsync::Config::try_from(window).unwrap();
 
             parent.spawn((
@@ -242,8 +242,8 @@ fn update_vsync(
         Query<&mut Text, With<VsyncText>>,
     ),
 ) {
-    let mut vsync_text = get_single_mut!(text_query);
-    let window = get_single!(window);
+    let mut vsync_text = text_query.single_mut();
+    let window = window.single();
     let vsync::Config { text, color } = vsync::Config::try_from(window).unwrap();
 
     let section = &mut vsync_text.sections[0];

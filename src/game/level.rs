@@ -1,16 +1,20 @@
 use crate::game::{self, enemy::invader};
 use bevy::{app, prelude::*};
 use std::fmt;
+
 pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_event::<LevelUp>()
-            .init_resource::<Level>()
-            .add_systems(OnEnter(game::State::Setup), new_level)
+            .add_systems(OnEnter(game::State::Setup), (setup, new_level).chain())
             .add_systems(Update, on_lvl_up.run_if(in_state(game::State::Playing)))
             .add_systems(OnEnter(game::State::LvlFinished), new_level);
     }
+}
+
+fn setup(mut commands: Commands) {
+    commands.insert_resource(Level::default());
 }
 
 fn new_level(mut game_state: ResMut<NextState<game::State>>) {
@@ -98,7 +102,7 @@ fn on_lvl_up(
     (mut lvl_up_event, mut lvl, mut probability, mut game_state): (
         EventReader<LevelUp>,
         ResMut<Level>,
-        ResMut<invader::shooting::probability::Probability>,
+        ResMut<invader::shooting::Probability>,
         ResMut<NextState<game::State>>,
     ),
 ) {
