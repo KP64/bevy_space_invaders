@@ -48,15 +48,17 @@ impl app::Plugin for Plugin {
     }
 }
 
-fn freeze(mut velocities: Query<&mut Velocity, With<Ufo>>) {
-    for mut velocity in &mut velocities {
+fn freeze(mut velocities: Query<(&mut Velocity, &AudioSink), With<Ufo>>) {
+    for (mut velocity, sfx) in &mut velocities {
         *velocity = Velocity::zero();
+        sfx.pause();
     }
 }
 
-fn unfreeze(mut velocities: Query<&mut Velocity, With<Ufo>>) {
-    for mut velocity in &mut velocities {
+fn unfreeze(mut velocities: Query<(&mut Velocity, &AudioSink), With<Ufo>>) {
+    for (mut velocity, sfx) in &mut velocities {
         *velocity = VELOCITY;
+        sfx.play();
     }
 }
 
