@@ -26,27 +26,29 @@ impl app::Plugin for Plugin {
 }
 
 fn movement(mut query: Query<(&mut Velocity, &ActionState<Action>), With<Player>>) {
-    let (mut rb_velocity, action_state) = query.single_mut();
+    for (mut rb_velocity, action_state) in &mut query {
+        let move_delta = action_state
+            .get_pressed()
+            .iter()
+            .map(|action| match action {
+                Action::Left => Vec2::NEG_X,
+                Action::Right => Vec2::X,
+                _ => Vec2::ZERO,
+            })
+            .sum::<Vec2>();
 
-    let move_delta = action_state
-        .get_pressed()
-        .iter()
-        .map(|action| match action {
-            Action::Left => Vec2::NEG_X,
-            Action::Right => Vec2::X,
-            _ => Vec2::ZERO,
-        })
-        .sum::<Vec2>();
-
-    rb_velocity.linvel = move_delta.normalize_or_zero() * SPEED;
+        rb_velocity.linvel = move_delta.normalize_or_zero() * SPEED;
+    }
 }
 
 fn correct_out_of_bounds(mut transform_query: Query<&mut Transform, With<Player>>) {
-    let mut player = transform_query.single_mut();
-    player.translation.x = player.translation.x.clamp(-SIDE_WALLS, SIDE_WALLS);
+    for mut player in &mut transform_query {
+        player.translation.x = player.translation.x.clamp(-SIDE_WALLS, SIDE_WALLS);
+    }
 }
 
 fn reset_velocity(mut velocity_query: Query<&mut Velocity, With<Player>>) {
-    let mut rb_velocity = velocity_query.single_mut();
-    *rb_velocity = Velocity::zero();
+    for mut rb_velocity in &mut velocity_query {
+        *rb_velocity = Velocity::zero();
+    }
 }

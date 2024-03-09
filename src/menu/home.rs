@@ -81,7 +81,6 @@ fn setup_play_button(parent: &mut ChildBuilder) {
                     margin: UiRect::bottom(Val::Vh(1.0)),
                     ..default()
                 },
-                background_color: button::color::NORMAL.into(),
                 ..default()
             },
         ))

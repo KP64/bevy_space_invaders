@@ -37,6 +37,9 @@ pub enum State {
     /// State when Player ends a game or Dies
     GameOver,
 
+    /// State when Player enters Leaderboard Data
+    Leaderboard,
+
     /// State when the game is Paused
     /// Can only be triggered when Playing
     Paused,
@@ -141,16 +144,17 @@ fn toggle_pause(
     (state, mut next_state): (Res<schedule::State<State>>, ResMut<NextState<State>>),
     input: Query<&ActionState<Action>>,
 ) {
-    let input = input.single();
-    if !input.just_pressed(&Action::TogglePause) {
-        return;
-    }
+    for input in &input {
+        if !input.just_pressed(&Action::TogglePause) {
+            return;
+        }
 
-    next_state.set(match state.get() {
-        State::Playing => State::Paused,
-        State::Paused => State::Playing,
-        _ => unreachable!(
-            "The `pause` System should not be run unless when the User is in `Playing` or `Paused` GameState"
-        ),
-    });
+        next_state.set(match state.get() {
+            State::Playing => State::Paused,
+            State::Paused => State::Playing,
+            _ => unreachable!(
+                "The `pause` System should not be run unless when the User is in `Playing` or `Paused` GameState"
+            ),
+        });
+    }
 }

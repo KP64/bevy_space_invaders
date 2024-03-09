@@ -131,7 +131,7 @@ fn setup_restart(parent: &mut ChildBuilder) {
 fn setup_leaderboard(parent: &mut ChildBuilder) {
     parent
         .spawn((
-            Name::new("LeaderBoard Button"),
+            Name::new("Leaderboard Button"),
             Buttons::LeaderBoard,
             ButtonBundle {
                 style: Style {
@@ -148,7 +148,7 @@ fn setup_leaderboard(parent: &mut ChildBuilder) {
         ))
         .with_children(|parent| {
             parent.spawn(TextBundle::from_section(
-                "Leader Board",
+                "Leaderboard",
                 TextStyle {
                     font_size: FONT_SIZE,
                     color: TEXT_COLOR,
@@ -200,7 +200,7 @@ fn game_over(
             Interaction::Pressed => {
                 match button_type {
                     Buttons::Restart => next_state.set(game::State::Setup),
-                    Buttons::LeaderBoard => todo!("Leader Board is still to be implemented!"),
+                    Buttons::LeaderBoard => next_state.set(game::State::Leaderboard),
                     Buttons::Quit => {
                         exit.send_default();
                     }

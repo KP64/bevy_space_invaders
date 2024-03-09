@@ -4,7 +4,7 @@ use crate::game::{
     player::{self, Player},
     projectile,
 };
-use bevy::{app, audio, prelude::*};
+use bevy::{app, audio, ecs::query::QuerySingleError, prelude::*};
 use bevy_rapier2d::prelude::*;
 use leafwing_input_manager::prelude::*;
 use std::time::Duration;
@@ -54,7 +54,13 @@ fn shoot(
     ),
     query: Query<(&Transform, &ActionState<Action>), With<Player>>,
 ) {
-    let (&transform, action_state) = query.single();
+    let (&transform, action_state) = match query.get_single() {
+        Ok(p) => p,
+        Err(e) => match e {
+            QuerySingleError::NoEntities(_) => return,
+            QuerySingleError::MultipleEntities(_) => panic!("There Can't be multiple players"),
+        },
+    };
 
     if !action_state.just_pressed(&Action::Shoot) {
         return;
