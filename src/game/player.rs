@@ -17,7 +17,8 @@ impl app::Plugin for Plugin {
             .add_plugins(actions::Plugin)
             .add_systems(OnEnter(game::State::LvlStartup), setup)
             .add_systems(Update, on_hit.run_if(in_state(game::State::Playing)))
-            .add_systems(OnEnter(game::State::LvlFinished), despawn);
+            .add_systems(OnEnter(game::State::LvlFinished), despawn)
+            .add_systems(OnEnter(game::State::GameOver), cleanup);
     }
 }
 
@@ -103,5 +104,14 @@ fn on_hit(
             },
         ));
         game_state.set(game::State::GameOver);
+    }
+}
+
+fn cleanup(mut commands: Commands, players: Query<Entity, With<Player>>) {
+    for player in &players {
+        let Some(mut player) = commands.get_entity(player) else {
+            continue;
+        };
+        player.despawn();
     }
 }

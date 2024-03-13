@@ -126,6 +126,13 @@ impl fmt::Display for Time {
 #[derive(Resource, Deref, DerefMut)]
 struct Board(Vec<Vec<cell::Position>>);
 
+impl Board {
+    fn get_last_invader_y_cell(&self) -> f32 {
+        let x = &self[self.len() - 2];
+        x[0].y
+    }
+}
+
 impl Default for Board {
     fn default() -> Self {
         Self(

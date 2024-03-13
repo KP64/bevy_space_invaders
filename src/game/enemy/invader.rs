@@ -1,5 +1,5 @@
 use super::{Enemy, PointsWorth};
-use crate::game::{self, level};
+use crate::game::{self, level, player};
 use bevy::{app, prelude::*};
 use bevy_rand::prelude::*;
 use bevy_rapier2d::prelude::*;
@@ -65,6 +65,10 @@ impl app::Plugin for Plugin {
             .add_systems(
                 OnEnter(game::State::LvlStartup),
                 setup.run_if(level::Type::is_normal),
+            )
+            .add_systems(
+                Update,
+                on_bottom_screen.run_if(in_state(game::State::Playing)),
             )
             .add_systems(OnEnter(game::State::GameOver), cleanup);
     }
@@ -160,5 +164,18 @@ fn setup(mut commands: Commands, (game_board, loader): (Res<game::Board>, Res<As
                 ),
             ));
         }
+    }
+}
+
+fn on_bottom_screen(
+    (board, mut event): (Res<game::Board>, EventWriter<player::Death>),
+    query: Query<&Transform, With<Invader>>,
+) {
+    let last_y_val = board.get_last_invader_y_cell();
+    if query
+        .iter()
+        .any(|transform| transform.translation.y < last_y_val)
+    {
+        event.send(player::Death);
     }
 }
