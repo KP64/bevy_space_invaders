@@ -84,6 +84,7 @@ fn shoot(
             Group::GROUP_2 | Group::GROUP_4,
         ),
         transform,
+        dimensions: Vec2::new(6.0, 18.0),
     });
 
     commands.spawn((

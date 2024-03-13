@@ -13,8 +13,6 @@ use std::ops::RangeInclusive;
 
 pub struct Plugin;
 
-const DIMENSIONS: Vec2 = Vec2::new(8.0, 24.0);
-
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_event::<Spawn>()
@@ -65,6 +63,7 @@ where
         velocity: Velocity,
         collision_groups: CollisionGroups,
         material_mesh: MaterialMesh2dBundle<M>,
+        dimensions: Vec2,
     ) -> Self {
         Self {
             material_mesh,
@@ -76,7 +75,7 @@ where
             active_collision_types: ActiveCollisionTypes::KINEMATIC_KINEMATIC
                 | ActiveCollisionTypes::KINEMATIC_STATIC,
             active_events: ActiveEvents::COLLISION_EVENTS,
-            collider: Collider::cuboid(DIMENSIONS.x / 2.0, DIMENSIONS.y / 2.0),
+            collider: Collider::cuboid(dimensions.x / 2.0, dimensions.y / 2.0),
         }
     }
 }
@@ -89,6 +88,7 @@ pub(super) struct Spawn {
     pub(super) velocity: Velocity,
     pub(super) transform: Transform,
     pub(super) collision_target_groups: CollisionGroups,
+    pub(super) dimensions: Vec2,
 }
 
 fn spawn(
@@ -103,6 +103,7 @@ fn spawn(
         velocity,
         transform,
         collision_target_groups,
+        dimensions,
     } in event.read()
     {
         commands.spawn((
@@ -111,11 +112,12 @@ fn spawn(
                 velocity,
                 collision_target_groups,
                 MaterialMesh2dBundle {
-                    mesh: meshes.add(Rectangle::from_size(DIMENSIONS)).into(),
+                    mesh: meshes.add(Rectangle::from_size(dimensions)).into(),
                     material: materials.add(Color::rgb_u8(64, 224, 240)),
                     transform,
                     ..default()
                 },
+                dimensions,
             ),
         ));
     }

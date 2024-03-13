@@ -86,6 +86,7 @@ fn shoot(
                     Group::GROUP_1 | Group::GROUP_3,
                 ),
                 transform: glob_transform.compute_transform(),
+                dimensions: Vec2::new(8.0, 24.0),
             })
         });
 
