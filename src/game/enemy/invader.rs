@@ -4,18 +4,55 @@ use bevy::{app, prelude::*};
 use bevy_rand::prelude::*;
 use bevy_rapier2d::prelude::*;
 use movement::Delay;
+use std::fmt;
 
 mod movement;
 pub mod shooting;
 
-type Type = &'static str;
+#[derive(Component, Clone, Copy)]
+enum Type {
+    Squid1,
+    Squid2,
+    Crab1,
+    Crab2,
+    Octopus1,
+    Octopus2,
+}
+
+impl fmt::Display for Type {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let itype = match self {
+            Self::Squid1 => "squid_1",
+            Self::Squid2 => "squid_2",
+            Self::Crab1 => "crab_1",
+            Self::Crab2 => "crab_2",
+            Self::Octopus1 => "octopus_1",
+            Self::Octopus2 => "octopus_2",
+        };
+        write!(f, "sprites/invaders/{itype}.png")
+    }
+}
+
+impl Type {
+    const fn next(self) -> Self {
+        match self {
+            Self::Squid1 => Self::Squid2,
+            Self::Squid2 => Self::Squid1,
+            Self::Crab1 => Self::Crab2,
+            Self::Crab2 => Self::Crab1,
+            Self::Octopus1 => Self::Octopus2,
+            Self::Octopus2 => Self::Octopus1,
+        }
+    }
+}
+
 type Dimensions = Vec2;
 type Points = usize;
 
 const TYPES: [(Type, Dimensions, Points); 3] = [
-    ("squid", Vec2::new(16.0, 16.0), 30),
-    ("crab", Vec2::new(22.0, 16.0), 20),
-    ("octopus", Vec2::new(24.0, 16.0), 10),
+    (Type::Squid1, Vec2::new(16.0, 16.0), 30),
+    (Type::Crab1, Vec2::new(22.0, 16.0), 20),
+    (Type::Octopus1, Vec2::new(24.0, 16.0), 10),
 ];
 const ROWS_TO_POPULATE: usize = 5;
 const ROWS_TO_SKIP: usize = 2;
@@ -39,7 +76,7 @@ fn cleanup(mut commands: Commands, invaders: Query<Entity, With<Invader>>) {
     }
 }
 
-fn get_type(grouping: usize) -> (&'static str, Vec2, usize) {
+fn get_type(grouping: usize) -> (Type, Vec2, usize) {
     *TYPES
         .get(grouping)
         .unwrap_or_else(|| panic!("There is no Enemy Type No°{grouping}"))
@@ -107,6 +144,7 @@ fn setup(mut commands: Commands, (game_board, loader): (Res<game::Board>, Res<As
         for (col_idx, column) in row.iter().enumerate() {
             commands.spawn((
                 Name::new(format!("Invader {row_idx}:{col_idx}")),
+                invader_type,
                 Bundle::new(
                     PointsWorth(points_worth),
                     // TODO: Find Formula or alternative Solution for chaotic movement.
@@ -114,7 +152,7 @@ fn setup(mut commands: Commands, (game_board, loader): (Res<game::Board>, Res<As
                     // ? Bottom Right => Invader 4:10
                     Delay(0.05 * (row_idx + col_idx / 2) as f32),
                     SpriteBundle {
-                        texture: loader.load(format!("sprites/invaders/{invader_type}_1.png")),
+                        texture: loader.load(invader_type.to_string()),
                         transform: Transform::from_xyz(column.x, row_y_offset, 0.0),
                         ..default()
                     },

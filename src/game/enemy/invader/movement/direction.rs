@@ -17,21 +17,21 @@ const DIRECTIONS: [Direction; 6] = [
     Direction::Right,
 ];
 
-impl Direction {
-    pub(super) fn to_vec2(self) -> Vec2 {
+impl From<Direction> for Vec2 {
+    fn from(value: Direction) -> Self {
         const X_OFFSET: f32 = cell::DIMENSIONS.x / 4.0;
         const Y_OFFSET: f32 = cell::DIMENSIONS.y / 2.0;
-        match self {
-            Self::Left => Vec2::new(-X_OFFSET, 0.0),
-            Self::Right => Vec2::new(X_OFFSET, 0.0),
-            Self::Down => Vec2::new(0.0, -Y_OFFSET),
+        match value {
+            Direction::Left => Self::new(-X_OFFSET, 0.0),
+            Direction::Right => Self::new(X_OFFSET, 0.0),
+            Direction::Down => Self::new(0.0, -Y_OFFSET),
         }
     }
 }
 
 #[derive(Resource, Deref, DerefMut)]
 pub(super) struct Next {
-    pub(super) idx: usize,
+    idx: usize,
 
     #[deref]
     pub(super) direction: Direction,

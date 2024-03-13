@@ -50,21 +50,17 @@ impl Default for Timer {
 }
 
 #[derive(Component, Deref, DerefMut)]
-struct Task(tasks::Task<(Transform, Entity)>);
+struct Task(tasks::Task<(Transform, super::Type, Entity)>);
 
 #[derive(Component, Clone, Copy, Deref, DerefMut)]
 pub(super) struct Delay(pub(super) f32);
 
 fn spawn_tasks(
     mut commands: Commands,
-    (mut movement_direction, mut movement_timer, time): (
-        ResMut<direction::Next>,
-        ResMut<Timer>,
-        Res<Time>,
-    ),
+    (mut movement, mut movement_timer, time): (ResMut<direction::Next>, ResMut<Timer>, Res<Time>),
     (tasks, row_query): (
         Query<&Task>,
-        Query<(Entity, &Transform, &Delay), With<Invader>>,
+        Query<(Entity, &super::Type, &Transform, &Delay), With<Invader>>,
     ),
 ) {
     if !tasks.is_empty() {
@@ -79,9 +75,9 @@ fn spawn_tasks(
     }
 
     let task_pool = AsyncComputeTaskPool::get();
-    let direction = movement_direction.to_vec2();
+    let direction = Vec2::from(movement.direction);
 
-    for (entity, &transform, &delay) in &row_query {
+    for (entity, &itype, &transform, &delay) in &row_query {
         let invader_id = commands.entity(entity).id();
         let task = task_pool.spawn(async move {
             // FIXME: Task ticks "sleep timer" further even if game is game::state::Paused
@@ -89,22 +85,36 @@ fn spawn_tasks(
 
             (
                 Transform::from_translation(transform.translation + direction.extend(0.0)),
+                itype,
                 invader_id,
             )
         });
         commands.spawn((Name::new("Invader Movement Task"), Task(task)));
     }
-    movement_direction.next();
+    movement.next();
 }
 
-fn handle_tasks(mut commands: Commands, mut tasks: Query<(Entity, &mut Task)>) {
+fn handle_tasks(
+    mut commands: Commands,
+    asset_loader: Res<AssetServer>,
+    mut tasks: Query<(Entity, &mut Task)>,
+) {
     for (task, mut movement_task) in &mut tasks {
-        let Some((new_position, moving_entity)) = block_on(poll_once(&mut movement_task.0)) else {
+        let Some((new_position, itype, moving_entity)) = block_on(poll_once(&mut movement_task.0))
+        else {
             continue;
         };
 
         if let Some(mut moving_entity) = commands.get_entity(moving_entity) {
-            moving_entity.insert(new_position);
+            let nxt_type = itype.next();
+            moving_entity.insert((
+                nxt_type,
+                SpriteBundle {
+                    texture: asset_loader.load(nxt_type.to_string()),
+                    transform: new_position,
+                    ..default()
+                },
+            ));
         }
         commands.entity(task).despawn();
     }
