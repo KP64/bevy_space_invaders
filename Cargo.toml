@@ -22,6 +22,7 @@ multiple_crate_versions = { level = "allow", priority = 1 }
 [dependencies]
 bevy = { version = "0.13", features = ["dynamic_linking", "wayland", "wav"] }
 bevy-inspector-egui = "0.23"
+bevy_jornet = "0.7.0"
 bevy_mod_debugdump = "0.10"
 bevy_rand = { version = "0.5", features = ["rand_chacha"] }
 bevy_rapier2d = { version = "0.25", features = [
@@ -30,6 +31,7 @@ bevy_rapier2d = { version = "0.25", features = [
     "parallel",
 ] }
 bevy_screen_diagnostics = "0.5"
+dotenvy = "0.15.7"
 image = "0.25"
 itertools = "0.12"
 leafwing-input-manager = "0.13"

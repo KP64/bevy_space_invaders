@@ -1,5 +1,6 @@
 use crate::AppState;
 use bevy::{app, ecs::schedule, prelude::*, time::Stopwatch};
+use bevy_jornet::{JornetPlugin, Leaderboard};
 use bevy_rand::prelude::*;
 use leafwing_input_manager::prelude::*;
 use player::actions::Action;
@@ -52,8 +53,17 @@ pub struct Plugin;
 
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
+        let (leaderboard_id, leaderboard_key) = (
+            dotenvy::var("JORNET_LEADERBOARD_ID").expect("Couldn't find Leaderboard ID"),
+            dotenvy::var("JORNET_LEADERBOARD_KEY").expect("Couldn't find Leaderboard Key"),
+        );
+
         app.init_state::<State>()
             .init_resource::<Board>()
+            .add_plugins(JornetPlugin::with_leaderboard(
+                &leaderboard_id,
+                &leaderboard_key,
+            ))
             .add_plugins(EntropyPlugin::<ChaCha8Rng>::default())
             .add_plugins((
                 level::Plugin,
@@ -79,7 +89,8 @@ impl app::Plugin for Plugin {
     }
 }
 
-fn start_new(mut next_state: ResMut<NextState<State>>) {
+fn start_new((mut next_state, mut leaderboard): (ResMut<NextState<State>>, ResMut<Leaderboard>)) {
+    leaderboard.create_player(None);
     next_state.set(State::Setup);
 }
 
