@@ -22,7 +22,7 @@ impl app::Plugin for Plugin {
                     update_time,
                     update_score,
                     update_level,
-                    update_player_name,
+                    update_name,
                 )
                     .run_if(in_state(game::State::Playing)),
             )
@@ -115,10 +115,7 @@ fn setup_name(
     ui_data.push(ui_entity);
 }
 
-fn update_player_name(
-    leaderboard: Res<Leaderboard>,
-    mut player_name: Query<&mut Text, With<PlayerName>>,
-) {
+fn update_name(leaderboard: Res<Leaderboard>, mut player_name: Query<&mut Text, With<PlayerName>>) {
     let Some(player) = leaderboard.get_player() else {
         return;
     };
@@ -153,7 +150,7 @@ fn setup_level(parent: &mut ChildBuilder, res: Res<Level>) {
         LevelText,
         TextBundle::from_sections([
             TextSection {
-                value: "Level ".into(), // TODO: Add newline when Bevy fixes Text Artifacts
+                value: "Level\n".into(),
                 style: TextStyle {
                     font_size: FONT_SIZE,
                     color: Color::WHITE,
@@ -188,7 +185,7 @@ fn setup_score(parent: &mut ChildBuilder, res: Res<Score>) {
         ScoreText,
         TextBundle::from_sections([
             TextSection {
-                value: "Score ".into(), // TODO: Add newline when Bevy fixes Text Artifacts
+                value: "Score\n".into(),
                 style: TextStyle {
                     font_size: FONT_SIZE,
                     color: Color::WHITE,
