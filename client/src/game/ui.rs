@@ -1,7 +1,6 @@
 use super::{cell, level::Level, Score, Time};
 use crate::game;
 use bevy::{app, prelude::*, time};
-use bevy_jornet::Leaderboard;
 
 pub struct Plugin;
 
@@ -11,19 +10,10 @@ impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<UiData>()
             .init_resource::<Time>()
-            .add_systems(
-                OnEnter(game::State::Setup),
-                (cleanup, setup_name, setup).chain(),
-            )
+            .add_systems(OnEnter(game::State::Setup), (cleanup, setup).chain())
             .add_systems(
                 Update,
-                (
-                    tick_timer,
-                    update_time,
-                    update_score,
-                    update_level,
-                    update_name,
-                )
+                (tick_timer, update_time, update_score, update_level)
                     .run_if(in_state(game::State::Playing)),
             )
             .add_systems(OnEnter(game::State::Exit), cleanup);
@@ -38,9 +28,6 @@ struct ScoreText;
 
 #[derive(Component)]
 struct LevelText;
-
-#[derive(Component)]
-struct PlayerName;
 
 #[derive(Resource, Default, Deref, DerefMut)]
 struct UiData(Vec<Entity>);
@@ -74,54 +61,6 @@ fn setup(
         .with_children(|parent| setup_time(parent, time))
         .id();
     ui_data.push(ui_entity);
-}
-
-fn setup_name(
-    mut commands: Commands,
-    (mut ui_data, leaderboard): (ResMut<UiData>, Res<Leaderboard>),
-) {
-    let ui_entity = commands
-        .spawn((
-            TextBundle::from_sections([
-                TextSection {
-                    value: "you are: ".to_string(),
-                    style: TextStyle {
-                        font_size: FONT_SIZE,
-                        color: Color::WHITE,
-                        ..default()
-                    },
-                },
-                TextSection {
-                    value: leaderboard
-                        .get_player()
-                        .map(|p| p.name.clone())
-                        .unwrap_or_default(),
-                    style: TextStyle {
-                        font_size: FONT_SIZE,
-                        color: Color::WHITE,
-                        ..default()
-                    },
-                },
-            ])
-            .with_style(Style {
-                position_type: PositionType::Absolute,
-                left: Val::Px(10.0),
-                bottom: Val::Px(10.0),
-                ..default()
-            }),
-            PlayerName,
-        ))
-        .id();
-    ui_data.push(ui_entity);
-}
-
-fn update_name(leaderboard: Res<Leaderboard>, mut player_name: Query<&mut Text, With<PlayerName>>) {
-    let Some(player) = leaderboard.get_player() else {
-        return;
-    };
-    player_name.single_mut().sections[1]
-        .value
-        .clone_from(&player.name);
 }
 
 fn setup_time(parent: &mut ChildBuilder, res: Res<Time>) {

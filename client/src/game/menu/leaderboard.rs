@@ -4,17 +4,25 @@ use crate::{
     menu::{button, FONT_SIZE, TEXT_COLOR},
 };
 use bevy::{app, prelude::*};
-use bevy_jornet::Leaderboard;
+use bevy_simple_text_input::{TextInputBundle, TextInputPlugin, TextInputSubmitEvent};
+use utils::Entry;
+
+const HOST_ADDRESS: &str = "http://127.0.0.1:3000";
+const TOP_N_SCORES: usize = 8;
 
 pub struct Plugin;
 
 // TODO: Replace bevy_jornet with inhouse leaderboard
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(game::State::Leaderboard), setup)
+        app.add_plugins(TextInputPlugin)
+            .add_systems(
+                OnEnter(game::State::Leaderboard),
+                (setup, display_scores).chain(),
+            )
             .add_systems(
                 Update,
-                (leaderboard, display_scores).run_if(in_state(game::State::Leaderboard)),
+                (leaderboard, name_input).run_if(in_state(game::State::Leaderboard)),
             )
             .add_systems(OnExit(game::State::Leaderboard), cleanup);
     }
@@ -28,13 +36,10 @@ fn cleanup(mut commands: Commands, mut menu_data: ResMut<GuiData>) {
 
 #[derive(Component)]
 enum Buttons {
-    Submit,
     Back,
 }
 
-fn setup(mut commands: Commands, (mut gui_data, leaderboard): (ResMut<GuiData>, Res<Leaderboard>)) {
-    leaderboard.refresh_leaderboard();
-
+fn setup(mut commands: Commands, mut gui_data: ResMut<GuiData>) {
     let ui_entity = commands
         .spawn((
             Name::new("Leaderboard UI Node"),
@@ -53,8 +58,8 @@ fn setup(mut commands: Commands, (mut gui_data, leaderboard): (ResMut<GuiData>, 
             },
         ))
         .with_children(setup_header)
+        .with_children(setup_name_input)
         .with_children(setup_leaderboard)
-        .with_children(setup_submit)
         .with_children(setup_back)
         .id();
 
@@ -67,26 +72,22 @@ enum LeaderboardMarker {
     Score,
 }
 
-fn display_scores(
-    mut commands: Commands,
-    leaderboard: Res<Leaderboard>,
-    root_ui: Query<(Entity, &LeaderboardMarker)>,
-) {
-    if !leaderboard.is_changed() {
-        return;
-    }
+fn display_scores(mut commands: Commands, root_ui: Query<(Entity, &LeaderboardMarker)>) {
+    let mut leaderboard: Vec<Entry> = reqwest::blocking::get(HOST_ADDRESS)
+        .unwrap()
+        .json::<Vec<Entry>>()
+        .unwrap();
 
-    let mut leaderboard = leaderboard.get_leaderboard();
-    leaderboard.sort_unstable_by(|s1, s2| s2.score.total_cmp(&s1.score));
-    leaderboard.truncate(10);
+    leaderboard.sort_unstable_by(|s1, s2| s2.score.cmp(&s1.score));
+    leaderboard.truncate(TOP_N_SCORES);
     for (root_entity, marker) in &root_ui {
         commands.entity(root_entity).despawn_descendants();
-        for score in &leaderboard {
+        for entry in &leaderboard {
             commands.entity(root_entity).with_children(|parent| {
                 parent.spawn(TextBundle::from_section(
                     match marker {
-                        LeaderboardMarker::Player => score.player.clone(),
-                        LeaderboardMarker::Score => format!("{} ", score.score),
+                        LeaderboardMarker::Player => entry.name.clone(),
+                        LeaderboardMarker::Score => format!("{} ", entry.score),
                     },
                     TextStyle {
                         font_size: FONT_SIZE,
@@ -192,35 +193,47 @@ fn setup_header(parent: &mut ChildBuilder) {
         });
 }
 
-fn setup_submit(parent: &mut ChildBuilder) {
-    parent
-        .spawn((
-            Name::new("Leaderboard submit Button"),
-            Buttons::Submit,
-            ButtonBundle {
-                style: Style {
-                    min_width: button::size::MIN_WIDTH,
-                    min_height: button::size::MIN_HEIGHT,
-                    width: button::size::WIDTH,
-                    height: button::size::HEIGHT,
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    margin: UiRect::bottom(Val::Vh(1.0)),
-                    ..default()
-                },
+fn setup_name_input(parent: &mut ChildBuilder) {
+    const BORDER_COLOR_ACTIVE: Color = Color::rgb(0.75, 0.52, 1.0);
+    const BACKGROUND_COLOR: Color = Color::rgb(0.15, 0.15, 0.15);
+    parent.spawn((
+        NodeBundle {
+            style: Style {
+                width: Val::Px(200.0),
+                border: UiRect::all(Val::Px(5.0)),
+                padding: UiRect::all(Val::Px(5.0)),
                 ..default()
             },
-        ))
-        .with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                "Submit",
-                TextStyle {
-                    font_size: FONT_SIZE,
-                    color: TEXT_COLOR,
-                    ..default()
-                },
-            ));
-        });
+            border_color: BORDER_COLOR_ACTIVE.into(),
+            background_color: BACKGROUND_COLOR.into(),
+            ..default()
+        },
+        TextInputBundle::default().with_text_style(TextStyle {
+            font_size: FONT_SIZE,
+            color: TEXT_COLOR,
+            ..default()
+        }),
+    ));
+}
+
+fn name_input(
+    (mut events, mut next_state, score): (
+        EventReader<TextInputSubmitEvent>,
+        ResMut<NextState<game::State>>,
+        Res<game::Score>,
+    ),
+) {
+    for event in events.read().filter(|e| !e.value.is_empty()) {
+        reqwest::blocking::Client::new()
+            .post(HOST_ADDRESS)
+            .body(format!(
+                "{{ \"name\": \"{}\", \"score\": {} }}",
+                event.value, score.0
+            ))
+            .send()
+            .unwrap();
+        next_state.set(game::State::GameOver);
+    }
 }
 
 fn setup_back(parent: &mut ChildBuilder) {
@@ -255,11 +268,7 @@ fn setup_back(parent: &mut ChildBuilder) {
 }
 
 fn leaderboard(
-    (mut next_state, leaderboard, score): (
-        ResMut<NextState<game::State>>,
-        Res<Leaderboard>,
-        Res<game::Score>,
-    ),
+    mut next_state: ResMut<NextState<game::State>>,
     mut interaction_query: Query<
         (&Interaction, &mut BackgroundColor, &Buttons),
         (Changed<Interaction>, With<Button>),
@@ -270,12 +279,6 @@ fn leaderboard(
             Interaction::Pressed => {
                 match button_type {
                     Buttons::Back => next_state.set(game::State::GameOver),
-                    Buttons::Submit => {
-                        leaderboard
-                            .send_score(score.0 as f32)
-                            .expect("Can't submit if Player is not signed in");
-                        next_state.set(game::State::GameOver);
-                    }
                 }
                 button::color::PRESSED
             }

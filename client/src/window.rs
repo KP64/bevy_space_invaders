@@ -44,7 +44,7 @@ fn fullscreen(
 fn toggle_vsync(
     mut event: EventReader<VsyncToggle>,
     mut window: Query<&mut Window, With<PrimaryWindow>>,
-) {
+) {                                                                                                                                                                                                                                             
     let mut window = window.single_mut();
     for _ in event.read() {
         window.present_mode = match window.present_mode {
@@ -60,7 +60,7 @@ fn set_window_icon(windows: NonSend<WinitWindows>) {
     // here we use the `image` crate to load our icon data from a png file
     // this is not a very bevy-native solution, but it will do
     let (icon_rgba, icon_width, icon_height) = {
-        let image = image::open("assets/game_icon_x512.png")
+        let image = image::open("client/assets/game_icon_x512.png")
             .expect("Failed to open icon path")
             .into_rgba8();
         let (width, height) = image.dimensions();
