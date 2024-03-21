@@ -25,7 +25,7 @@ image = "0.25"
 itertools = "0.12"
 leafwing-input-manager = "0.13"
 rand = "0.8"
-reqwest = { version = "0.11.26", features = ["json", "blocking"] }
+reqwest = { version = "0.12", features = ["json", "blocking"] }
 serde.workspace = true
 serde_json.workspace = true
 winit = "0.29"
