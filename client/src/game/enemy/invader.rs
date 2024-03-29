@@ -151,10 +151,7 @@ fn setup(mut commands: Commands, (game_board, loader): (Res<game::Board>, Res<As
                 invader_type,
                 Bundle::new(
                     PointsWorth(points_worth),
-                    // TODO: Find Formula or alternative Solution for chaotic movement.
-                    // ? Top Left => Invader 0:0
-                    // ? Bottom Right => Invader 4:10
-                    Delay(0.05 * (row_idx + col_idx / 2) as f32),
+                    Delay(0.1 * (row_idx + col_idx / 2) as f32),
                     SpriteBundle {
                         texture: loader.load(invader_type.to_string()),
                         transform: Transform::from_xyz(column.x, row_y_offset, 0.0),

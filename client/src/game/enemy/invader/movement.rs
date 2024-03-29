@@ -3,10 +3,8 @@ use crate::game;
 use bevy::{
     app,
     prelude::*,
-    tasks::{self, block_on, poll_once, AsyncComputeTaskPool},
-    time,
+    time::{self, Stopwatch},
 };
-use std::time::Duration;
 
 mod direction;
 
@@ -49,8 +47,14 @@ impl Default for Timer {
     }
 }
 
-#[derive(Component, Deref, DerefMut)]
-struct Task(tasks::Task<(Transform, super::Type, Entity)>);
+#[derive(Component)]
+struct Task {
+    transform: Transform,
+    itype: super::Type,
+    entity: Entity,
+    sw: Stopwatch,
+    delay: Delay,
+}
 
 #[derive(Component, Clone, Copy, Deref, DerefMut)]
 pub(super) struct Delay(pub(super) f32);
@@ -58,7 +62,7 @@ pub(super) struct Delay(pub(super) f32);
 fn spawn_tasks(
     mut commands: Commands,
     (mut movement, mut movement_timer, time): (ResMut<direction::Next>, ResMut<Timer>, Res<Time>),
-    (tasks, row_query): (
+    (tasks, invader_query): (
         Query<&Task>,
         Query<(Entity, &super::Type, &Transform, &Delay), With<Invader>>,
     ),
@@ -74,48 +78,42 @@ fn spawn_tasks(
         return;
     }
 
-    let task_pool = AsyncComputeTaskPool::get();
     let direction = Vec2::from(movement.direction);
 
-    for (entity, &itype, &transform, &delay) in &row_query {
-        let invader_id = commands.entity(entity).id();
-        let task = task_pool.spawn(async move {
-            // FIXME: Task ticks "sleep timer" further even if game is game::state::Paused
-            std::thread::sleep(Duration::from_secs_f32(delay.0));
-
-            (
-                Transform::from_translation(transform.translation + direction.extend(0.0)),
-                itype,
-                invader_id,
-            )
-        });
-        commands.spawn((Name::new("Invader Movement Task"), Task(task)));
+    for (entity, &itype, &trnsfrm, &delay) in &invader_query {
+        let task = Task {
+            transform: Transform::from_translation(trnsfrm.translation + direction.extend(0.0)),
+            itype,
+            entity: commands.entity(entity).id(),
+            sw: Stopwatch::new(),
+            delay,
+        };
+        commands.spawn(task);
     }
     movement.next();
 }
 
 fn handle_tasks(
     mut commands: Commands,
-    asset_loader: Res<AssetServer>,
+    (asset_loader, time): (Res<AssetServer>, Res<Time>),
     mut tasks: Query<(Entity, &mut Task)>,
 ) {
-    for (task, mut movement_task) in &mut tasks {
-        let Some((new_position, itype, moving_entity)) = block_on(poll_once(&mut movement_task.0))
-        else {
+    for (task_entity, mut mvmnt_task) in &mut tasks {
+        if mvmnt_task.sw.tick(time.delta()).elapsed_secs() < mvmnt_task.delay.0 {
             continue;
         };
 
-        if let Some(mut moving_entity) = commands.get_entity(moving_entity) {
-            let nxt_type = itype.next();
+        if let Some(mut moving_entity) = commands.get_entity(mvmnt_task.entity) {
+            let nxt_type = mvmnt_task.itype.next();
             moving_entity.insert((
                 nxt_type,
                 SpriteBundle {
                     texture: asset_loader.load(nxt_type.to_string()),
-                    transform: new_position,
+                    transform: mvmnt_task.transform,
                     ..default()
                 },
             ));
         }
-        commands.entity(task).despawn();
+        commands.entity(task_entity).despawn();
     }
 }
