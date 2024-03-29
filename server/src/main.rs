@@ -1,29 +1,17 @@
-use rocket::{routes, serde::json::Json};
-use std::sync::OnceLock;
-use surrealdb::{
-    engine::remote::ws::{Client, Ws},
-    opt::auth::Root,
-    Surreal,
-};
+use crate::db::DB;
+use rocket::{routes, serde::json::Json, State};
 use utils::Entry;
 
-static DB: OnceLock<Surreal<Client>> = OnceLock::new();
+mod db;
 
 #[rocket::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let db = DB.get_or_init(Surreal::init);
+    let db = DB::new().await?;
 
-    db.connect::<Ws>("127.0.0.1:8000").await?;
-    db.signin(Root {
-        username: "root",
-        password: "root",
-    })
-    .await?;
-
-    // TODO: Change NS & DB
-    db.use_ns("test").use_db("test").await?;
-
+    let config = rocket::Config::figment().merge(("port", 3000));
     rocket::build()
+        .configure(config)
+        .manage(db)
         .mount("/", routes![get_scores, post_scores])
         .launch()
         .await?;
@@ -32,15 +20,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[rocket::get("/")]
-async fn get_scores() -> Json<Vec<Entry>> {
-    let db = DB.get().unwrap();
+async fn get_scores(db: &State<DB>) -> Json<Vec<Entry>> {
     let scores = db.select("scores").await.unwrap();
     Json(scores)
 }
 
 #[rocket::post("/", data = "<input>")]
-async fn post_scores(input: Json<Entry>) {
-    let db = DB.get().unwrap();
+async fn post_scores(db: &State<DB>, input: Json<Entry>) {
     db.create::<Vec<Entry>>("scores")
         .content(input.0)
         .await
