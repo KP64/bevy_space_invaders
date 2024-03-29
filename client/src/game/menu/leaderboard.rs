@@ -73,10 +73,10 @@ enum LeaderboardMarker {
 }
 
 fn display_scores(mut commands: Commands, root_ui: Query<(Entity, &LeaderboardMarker)>) {
-    let mut leaderboard: Vec<Entry> = reqwest::blocking::get(HOST_ADDRESS)
-        .unwrap()
-        .json::<Vec<Entry>>()
-        .unwrap();
+    let Ok(response) = reqwest::blocking::get(HOST_ADDRESS) else {
+        return;
+    };
+    let mut leaderboard: Vec<Entry> = response.json::<Vec<Entry>>().unwrap();
 
     leaderboard.sort_unstable_by(|s1, s2| s2.score.cmp(&s1.score));
     leaderboard.truncate(TOP_N_SCORES);
@@ -224,15 +224,16 @@ fn name_input(
     ),
 ) {
     for event in events.read().filter(|e| !e.value.is_empty()) {
-        reqwest::blocking::Client::new()
+        let response = reqwest::blocking::Client::new()
             .post(HOST_ADDRESS)
             .body(format!(
                 "{{ \"name\": \"{}\", \"score\": {} }}",
                 event.value, score.0
             ))
-            .send()
-            .unwrap();
-        next_state.set(game::State::GameOver);
+            .send();
+        if response.is_ok() {
+            next_state.set(game::State::GameOver);
+        }
     }
 }
 
