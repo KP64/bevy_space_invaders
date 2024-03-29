@@ -20,7 +20,6 @@ bevy_rapier2d = { version = "0.25", features = [
     "parallel",
 ] }
 bevy_screen_diagnostics = "0.5"
-dotenvy = "0.15.7"
 image = "0.25"
 itertools = "0.12"
 leafwing-input-manager = "0.13"

@@ -1,9 +1,9 @@
+use anyhow::Result;
 use std::ops;
-
 use surrealdb::{
     engine::remote::ws::{Client, Ws},
     opt::auth::Root,
-    Result, Surreal,
+    Surreal,
 };
 
 const IP: &str = "127.0.0.1";
@@ -24,8 +24,8 @@ impl DB {
         let db = Surreal::new::<Ws>(format!("{IP}:{PORT}")).await?;
 
         db.signin(Root {
-            username: "root",
-            password: "root",
+            username: &dotenvy::var("DB_USER")?,
+            password: &dotenvy::var("DB_PASSWORD")?,
         })
         .await?;
 

@@ -1,11 +1,12 @@
 use crate::db::DB;
+use anyhow::Result;
 use rocket::{routes, serde::json::Json, State};
 use utils::Entry;
 
 mod db;
 
 #[rocket::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     let db = DB::new().await?;
 
     let config = rocket::Config::figment().merge(("port", 3000));

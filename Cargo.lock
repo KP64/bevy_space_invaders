@@ -1904,7 +1904,6 @@ dependencies = [
  "bevy_rapier2d",
  "bevy_screen_diagnostics",
  "bevy_simple_text_input",
- "dotenvy",
  "image 0.25.0",
  "itertools 0.12.1",
  "leafwing-input-manager",
@@ -6268,6 +6267,8 @@ dependencies = [
 name = "server"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "dotenvy",
  "rocket",
  "serde",
  "serde_json",
