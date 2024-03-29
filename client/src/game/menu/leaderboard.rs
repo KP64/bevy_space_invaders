@@ -12,7 +12,6 @@ const TOP_N_SCORES: usize = 8;
 
 pub struct Plugin;
 
-// TODO: Replace bevy_jornet with inhouse leaderboard
 impl app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TextInputPlugin)

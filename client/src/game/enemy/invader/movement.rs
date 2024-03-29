@@ -1,5 +1,5 @@
 use super::Invader;
-use crate::game::{self};
+use crate::game;
 use bevy::{
     app,
     prelude::*,
