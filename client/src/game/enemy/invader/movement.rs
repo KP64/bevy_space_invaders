@@ -63,7 +63,7 @@ fn spawn_tasks(
     mut commands: Commands,
     (mut movement, mut movement_timer, time): (ResMut<direction::Next>, ResMut<Timer>, Res<Time>),
     (tasks, invader_query): (
-        Query<&Task>,
+        Query<(), With<Task>>,
         Query<(Entity, &super::Type, &Transform, &Delay), With<Invader>>,
     ),
 ) {
@@ -105,7 +105,7 @@ fn handle_tasks(
 
         if let Some(mut moving_entity) = commands.get_entity(mvmnt_task.entity) {
             let nxt_type = mvmnt_task.itype.next();
-            moving_entity.insert((
+            moving_entity.try_insert((
                 nxt_type,
                 SpriteBundle {
                     texture: asset_loader.load(nxt_type.to_string()),

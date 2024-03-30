@@ -115,7 +115,7 @@ impl From<Score> for Color {
 struct Time(Stopwatch);
 
 impl fmt::Display for Time {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let time = self.elapsed().as_secs();
         let (minutes, seconds) = (time / 60, time % 60);
 

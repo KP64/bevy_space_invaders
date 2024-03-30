@@ -20,7 +20,7 @@ enum Type {
 }
 
 impl fmt::Display for Type {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let itype = match self {
             Self::Squid1 => "squid_1",
             Self::Squid2 => "squid_2",

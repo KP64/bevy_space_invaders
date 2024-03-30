@@ -68,7 +68,7 @@ impl Default for Level {
 }
 
 impl fmt::Display for Level {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:^5}", self.0)
     }
 }
