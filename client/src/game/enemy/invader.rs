@@ -80,12 +80,6 @@ fn cleanup(mut commands: Commands, invaders: Query<Entity, With<Invader>>) {
     }
 }
 
-fn get_type(grouping: usize) -> (Type, Vec2, usize) {
-    *TYPES
-        .get(grouping)
-        .unwrap_or_else(|| panic!("There is no Enemy Type No°{grouping}"))
-}
-
 #[derive(Bundle)]
 struct Bundle {
     enemy: Enemy,
@@ -141,9 +135,8 @@ fn setup(mut commands: Commands, (game_board, loader): (Res<game::Board>, Res<As
             .unwrap_or_else(|| panic!("Could not get the first Cellposition of row {row_idx}"))
             .y;
 
-        // TODO: Formula Not Accurate. Change to one that could never fail.
-        let group = row_idx / TYPES.len() % 3;
-        let (invader_type, dimensions, points_worth) = get_type(group);
+        let group = (row_idx + 1).div_ceil(2) - 1; // 2 Rows == 1 Group
+        let (invader_type, dimensions, points_worth) = TYPES[group];
 
         for (col_idx, column) in row.iter().enumerate() {
             commands.spawn((
