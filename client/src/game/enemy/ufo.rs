@@ -11,9 +11,10 @@ use std::cmp::Ordering;
 
 const DIMENSIONS: Vec2 = Vec2::new(48.0, 21.0);
 
-// TODO: Make Velocity.x Random sign (+ || -)?
-const VELOCITY: Velocity = Velocity::linear(Vec2::new(200.0, 0.0));
+#[derive(Component)]
+struct OGVelocity(Velocity);
 
+const SPEED: f32 = 200.0;
 const POINTS: [usize; 5] = [50, 100, 150, 200, 300];
 
 const X_OFFSET: f32 = window::DIMENSIONS.x / 2.0 + DIMENSIONS.x;
@@ -55,9 +56,9 @@ fn freeze(mut velocities: Query<(&mut Velocity, &AudioSink), With<Ufo>>) {
     }
 }
 
-fn unfreeze(mut velocities: Query<(&mut Velocity, &AudioSink), With<Ufo>>) {
-    for (mut velocity, sfx) in &mut velocities {
-        *velocity = VELOCITY;
+fn unfreeze(mut velocities: Query<(&mut Velocity, &OGVelocity, &AudioSink), With<Ufo>>) {
+    for (mut velocity, og_vel, sfx) in &mut velocities {
+        *velocity = og_vel.0;
         sfx.play();
     }
 }
@@ -72,6 +73,7 @@ struct Bundle {
     points: PointsWorth,
     sprite: SpriteBundle,
     rigidbody: RigidBody,
+    og_velocity: OGVelocity,
     velocity: Velocity,
     sensor: Sensor,
     active_collision_types: ActiveCollisionTypes,
@@ -81,14 +83,16 @@ struct Bundle {
 }
 
 impl Bundle {
-    fn new(points: PointsWorth, sprite: SpriteBundle) -> Self {
+    fn new(points: PointsWorth, sprite: SpriteBundle, speed: f32) -> Self {
+        let vel = Velocity::linear(Vec2::new(speed, 0.0));
         Self {
             ufo: Ufo,
             enemy: Enemy,
             points,
             sprite,
             rigidbody: RigidBody::KinematicVelocityBased,
-            velocity: VELOCITY,
+            og_velocity: OGVelocity(vel),
+            velocity: vel,
             sensor: Sensor,
             active_collision_types: ActiveCollisionTypes::KINEMATIC_KINEMATIC
                 | ActiveCollisionTypes::KINEMATIC_STATIC,
@@ -156,15 +160,21 @@ fn spawn(
         .expect("Game Board Columns should not be Empty")
         .y;
     for _ in spawn_event.read() {
+        let (x_pos, speed) = if rng.gen::<bool>() {
+            (-X_OFFSET, SPEED)
+        } else {
+            (X_OFFSET, -SPEED)
+        };
         commands.spawn((
             Name::new("Ufo"),
             Bundle::new(
                 PointsWorth(get_random_points(&mut rng)),
                 SpriteBundle {
                     texture: asset_server.load("sprites/ufo.png"),
-                    transform: Transform::from_xyz(-X_OFFSET, first_y_cell, 0.0),
+                    transform: Transform::from_xyz(x_pos, first_y_cell, 0.0),
                     ..default()
                 },
+                speed,
             ),
             AudioBundle {
                 source: asset_server.load("sounds/ufo/highpitch.wav"),
@@ -185,7 +195,12 @@ fn despawn_out_of_window(
         .iter()
         .map(|(ufo, transform, velocity)| (ufo, transform.translation.x, velocity.linvel.x))
     {
-        match x_vel.total_cmp(&0.0) {
+        let Some(ord) = x_vel.partial_cmp(&0.0) else {
+            warn!("Couldn't compare Ufo Velocity");
+            continue;
+        };
+
+        match ord {
             Ordering::Less => {
                 if x_pos < -X_OFFSET {
                     commands.entity(ufo).despawn();
