@@ -82,14 +82,13 @@ fn spawn_tasks(
     let direction = Vec2::from(movement.direction);
 
     for (entity, &itype, &trnsfrm, &delay) in &invader_query {
-        let task = Task {
+        commands.spawn(Task {
             transform: Transform::from_translation(trnsfrm.translation + direction.extend(0.0)),
             itype,
-            entity: commands.entity(entity).id(),
+            entity,
             sw: Stopwatch::new(),
             delay,
-        };
-        commands.spawn(task);
+        });
     }
     movement.next();
 }
