@@ -4,7 +4,7 @@ use bevy::{app, prelude::*};
 use bevy_rand::prelude::*;
 use bevy_rapier2d::prelude::*;
 use movement::Delay;
-use std::fmt;
+use std::{fmt, time::Duration};
 
 mod movement;
 pub mod shooting;
@@ -144,7 +144,10 @@ fn setup(mut commands: Commands, (game_board, loader): (Res<game::Board>, Res<As
                 invader_type,
                 Bundle::new(
                     PointsWorth(points_worth),
-                    Delay(0.1 * (row_idx + col_idx / 2) as f32),
+                    #[allow(clippy::cast_precision_loss)]
+                    Delay(Duration::from_secs_f32(
+                        0.1 * (row_idx + col_idx / 2) as f32,
+                    )),
                     SpriteBundle {
                         texture: loader.load(invader_type.to_string()),
                         transform: Transform::from_xyz(column.x, row_y_offset, 0.0),

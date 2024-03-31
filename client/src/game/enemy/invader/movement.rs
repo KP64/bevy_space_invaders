@@ -5,6 +5,7 @@ use bevy::{
     prelude::*,
     time::{self, Stopwatch},
 };
+use std::time::Duration;
 
 mod direction;
 
@@ -57,7 +58,7 @@ struct Task {
 }
 
 #[derive(Component, Clone, Copy, Deref, DerefMut)]
-pub(super) struct Delay(pub(super) f32);
+pub(super) struct Delay(pub(super) Duration);
 
 fn spawn_tasks(
     mut commands: Commands,
@@ -99,7 +100,7 @@ fn handle_tasks(
     mut tasks: Query<(Entity, &mut Task)>,
 ) {
     for (task_entity, mut mvmnt_task) in &mut tasks {
-        if mvmnt_task.sw.tick(time.delta()).elapsed_secs() < mvmnt_task.delay.0 {
+        if mvmnt_task.sw.tick(time.delta()).elapsed() < mvmnt_task.delay.0 {
             continue;
         };
 
