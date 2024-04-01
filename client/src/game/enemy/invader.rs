@@ -76,7 +76,9 @@ impl app::Plugin for Plugin {
 
 fn cleanup(mut commands: Commands, invaders: Query<Entity, With<Invader>>) {
     for invader in &invaders {
-        commands.entity(invader).despawn_recursive();
+        if let Some(mut invader) = commands.get_entity(invader) {
+            invader.despawn();
+        }
     }
 }
 

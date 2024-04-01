@@ -173,8 +173,12 @@ fn check_collisions(
             e => unreachable!("Collision of Projectile with Unknown Entity Collision: {e:#?}"),
         };
 
-        commands.entity(entity_1).despawn();
-        commands.entity(entity_2).despawn();
+        if let Some(mut entity_1) = commands.get_entity(entity_1) {
+            entity_1.despawn();
+        }
+        if let Some(mut entity_2) = commands.get_entity(entity_2) {
+            entity_2.despawn();
+        }
     }
 }
 
@@ -199,12 +203,16 @@ fn despawn_out_of_window(
         .map(|(projectile, transform)| (projectile, transform.translation.y))
         .filter(|(_, y_pos)| !WINDOW_RANGE.contains(y_pos))
     {
-        commands.entity(projectile).despawn();
+        if let Some(mut projectile) = commands.get_entity(projectile) {
+            projectile.despawn();
+        }
     }
 }
 
 fn cleanup(mut commands: Commands, projectiles: Query<Entity, With<Projectile>>) {
     for projectile in &projectiles {
-        commands.entity(projectile).despawn();
+        if let Some(mut projectile) = commands.get_entity(projectile) {
+            projectile.despawn();
+        }
     }
 }

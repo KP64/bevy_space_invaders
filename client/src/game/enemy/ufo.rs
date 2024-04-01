@@ -3,7 +3,7 @@ use crate::{
     game::{self, enemy::Enemy},
     window,
 };
-use bevy::{app, audio, prelude::*};
+use bevy::{app, audio, ecs::system::EntityCommands, prelude::*};
 use bevy_rand::prelude::*;
 use bevy_rapier2d::prelude::*;
 use rand::Rng;
@@ -191,6 +191,12 @@ fn despawn_out_of_window(
     mut commands: Commands,
     query: Query<(Entity, &Transform, &Velocity), With<Ufo>>,
 ) {
+    fn despawn(entity: Option<EntityCommands>) {
+        if let Some(mut ufo) = entity {
+            ufo.despawn();
+        }
+    }
+
     for (ufo, x_pos, x_vel) in query
         .iter()
         .map(|(ufo, transform, velocity)| (ufo, transform.translation.x, velocity.linvel.x))
@@ -203,13 +209,13 @@ fn despawn_out_of_window(
         match ord {
             Ordering::Less => {
                 if x_pos < -X_OFFSET {
-                    commands.entity(ufo).despawn();
+                    despawn(commands.get_entity(ufo));
                 }
             }
             Ordering::Equal => unreachable!("Ufo Velocity Should not Be Zero When Out of Window"),
             Ordering::Greater => {
                 if x_pos > X_OFFSET {
-                    commands.entity(ufo).despawn();
+                    despawn(commands.get_entity(ufo));
                 }
             }
         }
@@ -218,7 +224,9 @@ fn despawn_out_of_window(
 
 fn cleanup(mut commands: Commands, ufos: Query<Entity, With<Ufo>>) {
     for ufo in &ufos {
-        commands.entity(ufo).despawn();
+        if let Some(mut ufo) = commands.get_entity(ufo) {
+            ufo.despawn();
+        }
     }
     commands.remove_resource::<Spawner>();
 }

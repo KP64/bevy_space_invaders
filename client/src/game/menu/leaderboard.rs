@@ -75,7 +75,7 @@ fn display_scores(mut commands: Commands, root_ui: Query<(Entity, &LeaderboardMa
     let Ok(response) = reqwest::blocking::get(HOST_ADDRESS) else {
         return;
     };
-    let mut leaderboard: Vec<Entry> = response.json::<Vec<Entry>>().unwrap();
+    let mut leaderboard = response.json::<Vec<Entry>>().unwrap();
 
     leaderboard.sort_unstable_by(|s1, s2| s2.score.cmp(&s1.score));
     leaderboard.truncate(TOP_N_SCORES);

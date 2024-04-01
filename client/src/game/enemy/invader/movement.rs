@@ -31,7 +31,9 @@ fn init(mut commands: Commands) {
 
 fn cleanup(mut commands: Commands, tasks: Query<Entity, With<Task>>) {
     for task in &tasks {
-        commands.entity(task).despawn();
+        if let Some(mut task) = commands.get_entity(task) {
+            task.despawn();
+        }
     }
     commands.remove_resource::<Timer>();
     commands.remove_resource::<direction::Next>();
@@ -114,6 +116,8 @@ fn handle_tasks(
                 },
             ));
         }
-        commands.entity(task_entity).despawn();
+        if let Some(mut task) = commands.get_entity(task_entity) {
+            task.despawn();
+        }
     }
 }
