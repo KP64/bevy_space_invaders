@@ -6,6 +6,7 @@ use crate::{game, window};
 use bevy::{
     app,
     prelude::*,
+    render::color,
     sprite::{Material2d, MaterialMesh2dBundle},
 };
 use bevy_rapier2d::prelude::*;
@@ -80,6 +81,9 @@ where
     }
 }
 
+#[derive(Component, Clone, Copy, Deref, DerefMut)]
+pub(super) struct Color(pub(super) color::Color);
+
 #[derive(Event)]
 struct Collision;
 
@@ -89,6 +93,7 @@ pub(super) struct Spawn {
     pub(super) transform: Transform,
     pub(super) collision_target_groups: CollisionGroups,
     pub(super) dimensions: Vec2,
+    pub(super) color: Color,
 }
 
 fn spawn(
@@ -104,6 +109,7 @@ fn spawn(
         transform,
         collision_target_groups,
         dimensions,
+        color,
     } in event.read()
     {
         commands.spawn((
@@ -113,7 +119,7 @@ fn spawn(
                 collision_target_groups,
                 MaterialMesh2dBundle {
                     mesh: meshes.add(Rectangle::from_size(dimensions)).into(),
-                    material: materials.add(Color::rgb_u8(64, 224, 240)),
+                    material: materials.add(color.0),
                     transform,
                     ..default()
                 },
@@ -161,11 +167,11 @@ fn check_collisions(
             }
             (Group::GROUP_2, _) | (_, Group::GROUP_2) => {
                 let score = match (point1, point2) {
-                    (None, Some(p)) | (Some(p), None) => p.0,
-                    (None, None) => 0,
+                    (None, Some(p)) | (Some(p), None) => *p,
+                    (None, None) => PointsWorth::default(),
                     (Some(_), Some(_)) => unreachable!("Two Enemies Collided with each other"),
                 };
-                enemy_death.send(enemy::Death(PointsWorth(score)));
+                enemy_death.send(enemy::Death(score));
             }
             (Group::GROUP_3 | Group::GROUP_4, Group::GROUP_3 | Group::GROUP_4) => {
                 projectile_collision_event.send(Collision);

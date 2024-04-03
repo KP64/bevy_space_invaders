@@ -68,13 +68,14 @@ fn shoot(
             &Cooldown,
             &mut EntropyComponent<ChaCha8Rng>,
             &GlobalTransform,
+            &projectile::Color,
         ),
         With<Enemy>,
     >,
 ) {
     let to_spawn = query
         .iter_mut()
-        .filter_map(|(timer, mut rng, glob_transform)| {
+        .filter_map(|(timer, mut rng, glob_transform, &color)| {
             if !(timer.finished() && rng.gen_bool(res.0)) {
                 return None;
             }
@@ -87,6 +88,7 @@ fn shoot(
                 ),
                 transform: glob_transform.compute_transform(),
                 dimensions: Vec2::new(8.0, 24.0),
+                color,
             })
         });
 

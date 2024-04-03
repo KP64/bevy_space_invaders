@@ -1,5 +1,5 @@
 use super::{Enemy, PointsWorth};
-use crate::game::{self, level, player};
+use crate::game::{self, level, player, projectile};
 use bevy::{app, prelude::*};
 use bevy_rand::prelude::*;
 use bevy_rapier2d::prelude::*;
@@ -49,10 +49,10 @@ impl Type {
 type Dimensions = Vec2;
 type Points = usize;
 
-const TYPES: [(Type, Dimensions, Points); 3] = [
-    (Type::Squid1, Vec2::new(16.0, 16.0), 30),
-    (Type::Crab1, Vec2::new(22.0, 16.0), 20),
-    (Type::Octopus1, Vec2::new(24.0, 16.0), 10),
+const TYPES: [(Type, Dimensions, Points, Color); 3] = [
+    (Type::Squid1, Vec2::new(16.0, 16.0), 30, Color::GREEN),
+    (Type::Crab1, Vec2::new(22.0, 16.0), 20, Color::YELLOW),
+    (Type::Octopus1, Vec2::new(24.0, 16.0), 10, Color::RED),
 ];
 const ROWS_TO_POPULATE: usize = 5;
 const ROWS_TO_SKIP: usize = 2;
@@ -138,7 +138,7 @@ fn setup(mut commands: Commands, (game_board, loader): (Res<game::Board>, Res<As
             .y;
 
         let group = (row_idx + 1).div_ceil(2) - 1; // 2 Rows == 1 Group
-        let (invader_type, dimensions, points_worth) = TYPES[group];
+        let (invader_type, dimensions, points_worth, color) = TYPES[group];
 
         for (col_idx, column) in row.iter().enumerate() {
             commands.spawn((
@@ -157,6 +157,7 @@ fn setup(mut commands: Commands, (game_board, loader): (Res<game::Board>, Res<As
                     },
                     Collider::cuboid(dimensions.x / 2.0, dimensions.y / 2.0),
                 ),
+                projectile::Color(color),
             ));
         }
     }

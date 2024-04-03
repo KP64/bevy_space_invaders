@@ -6,7 +6,7 @@ use surrealdb::{
     Surreal,
 };
 
-const IP: &str = "127.0.0.1";
+const IP: &str = "127.0.0.1"; // TODO: Try "localhost", "0.0.0.0"
 const PORT: usize = 8000;
 
 #[derive(Clone)]
@@ -21,13 +21,17 @@ impl ops::Deref for DB {
 
 impl DB {
     pub async fn new() -> Result<Self> {
-        let db = Surreal::new::<Ws>(format!("{IP}:{PORT}")).await?;
+        let address = format!("{IP}:{PORT}");
+        let db = Surreal::new::<Ws>(&address)
+            .await
+            .expect(&format!("No Connection to Address {address}"));
 
         db.signin(Root {
             username: &dotenvy::var("DB_USER")?,
             password: &dotenvy::var("DB_PASSWORD")?,
         })
-        .await?;
+        .await
+        .expect("Could not sign in to db");
 
         db.use_ns("test").use_db("test").await?;
         Ok(Self(db))

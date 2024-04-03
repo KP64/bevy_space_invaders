@@ -9,9 +9,7 @@ mod db;
 async fn main() -> Result<()> {
     let db = DB::new().await?;
 
-    let config = rocket::Config::figment().merge(("port", 3000));
     rocket::build()
-        .configure(config)
         .manage(db)
         .mount("/", routes![get_scores, post_scores])
         .launch()

@@ -85,6 +85,7 @@ fn shoot(
         ),
         transform,
         dimensions: Vec2::new(6.0, 18.0),
+        color: projectile::Color(Color::PINK),
     });
 
     commands.spawn((
