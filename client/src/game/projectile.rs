@@ -25,6 +25,7 @@ impl app::Plugin for Plugin {
                 (despawn_out_of_window, spawn, check_collisions, on_hit)
                     .run_if(in_state(game::State::Playing)),
             )
+            .add_systems(OnEnter(game::State::LvlFinished), cleanup)
             .add_systems(OnEnter(game::State::GameOver), cleanup);
     }
 }
