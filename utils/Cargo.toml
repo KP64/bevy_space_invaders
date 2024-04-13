@@ -11,6 +11,7 @@ description.workspace = true
 
 [dependencies]
 serde.workspace = true
+sqlx.workspace = true
 
 [lints]
 workspace = true

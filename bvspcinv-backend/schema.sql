@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS entries;
+
+CREATE TABLE entries (
+  name TEXT NOT NULL PRIMARY KEY,
+  score BIGINT NOT NULL
+);

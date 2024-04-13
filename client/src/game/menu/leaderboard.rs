@@ -7,7 +7,7 @@ use bevy::{app, prelude::*};
 use bevy_simple_text_input::{TextInputBundle, TextInputPlugin, TextInputSubmitEvent};
 use utils::Entry;
 
-const HOST_ADDRESS: &str = "http://127.0.0.1:3000";
+const HOST_ADDRESS: &str = "http://127.0.0.1:8000";
 const TOP_N_SCORES: usize = 8;
 
 pub struct Plugin;

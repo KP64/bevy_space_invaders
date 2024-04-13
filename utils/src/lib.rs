@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Entry {
     pub name: String,
-    pub score: usize,
+    pub score: i64,
 }
 
 #[cfg(test)]
