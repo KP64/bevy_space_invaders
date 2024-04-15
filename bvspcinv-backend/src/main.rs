@@ -32,6 +32,18 @@ async fn get_scores(db: &State<DB>) -> Result<Json<Vec<Entry>>, String> {
 
 #[rocket::post("/", data = "<input>")]
 async fn post_scores(db: &State<DB>, input: Json<Entry>) -> Result<(), String> {
+    let entry = sqlx::query_as::<_, Entry>("SELECT * FROM entries WHERE name = $1")
+        .bind(&input.name)
+        .fetch_optional(&db.pool)
+        .await
+        .map_err(|e| format!("Couldn't get User: {e}"))?;
+
+    if let Some(old_entry) = entry {
+        if old_entry.score >= input.score {
+            return Ok(());
+        }
+    }
+
     sqlx::query("INSERT INTO entries (name, score) VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET name = $1, score = $2;")
         .bind(&input.name)
         .bind(input.score)
