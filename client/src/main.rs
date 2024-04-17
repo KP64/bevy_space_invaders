@@ -92,6 +92,4 @@ fn volume((mut glob_vol, keyboard_input): (ResMut<GlobalVolume>, Res<ButtonInput
 
     let clamped = (glob_vol.volume.get() + diff).clamp(0.0, 1.0);
     glob_vol.volume = audio::Volume::new(clamped);
-
-    info!("VOLUME: {:?}", glob_vol.volume);
 }
