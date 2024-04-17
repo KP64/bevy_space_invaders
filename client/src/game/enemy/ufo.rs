@@ -41,7 +41,8 @@ impl app::Plugin for Plugin {
             )
             .add_systems(
                 Update,
-                (spawn, despawn_out_of_window).run_if(in_state(game::State::Playing)),
+                (spawn, update_volume, despawn_out_of_window)
+                    .run_if(in_state(game::State::Playing)),
             )
             .add_systems(OnEnter(game::State::Paused), freeze)
             .add_systems(OnExit(game::State::Paused), unfreeze)
@@ -179,11 +180,17 @@ fn spawn(
             AudioBundle {
                 source: asset_server.load("sounds/ufo/highpitch.wav"),
                 settings: PlaybackSettings {
-                    mode: audio::PlaybackMode::Loop,
+                    mode: audio::PlaybackMode::Loop, // TODO: Playing audio is not affected by GlobalVolume !!!!!!!!!!!
                     ..default()
                 },
             },
         ));
+    }
+}
+
+fn update_volume(glob_vol: Res<GlobalVolume>, mut query: Query<&AudioSink, With<Ufo>>) {
+    for ufo in &mut query {
+        ufo.set_volume(*glob_vol.volume);
     }
 }
 

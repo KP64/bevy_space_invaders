@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use bevy::{
+    audio,
     log::{self, LogPlugin},
     prelude::*,
     window::PresentMode,
@@ -57,7 +58,7 @@ fn main() {
     {
         app.add_plugins(RapierDebugRenderPlugin::default())
             .add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::default())
-            .add_systems(Update, toggle_debug_renderer);
+            .add_systems(Update, (toggle_debug_renderer, volume));
         bevy_mod_debugdump::print_schedule_graph(&mut app, Update);
     }
 
@@ -78,4 +79,19 @@ fn toggle_debug_renderer(
     if input.just_pressed(KeyCode::KeyR) {
         ctx.enabled = !ctx.enabled;
     }
+}
+
+fn volume((mut glob_vol, keyboard_input): (ResMut<GlobalVolume>, Res<ButtonInput<KeyCode>>)) {
+    let diff = if keyboard_input.just_pressed(KeyCode::KeyL) {
+        0.1
+    } else if keyboard_input.just_pressed(KeyCode::KeyK) {
+        -0.1
+    } else {
+        return;
+    };
+
+    let clamped = (glob_vol.volume.get() + diff).clamp(0.0, 1.0);
+    glob_vol.volume = audio::Volume::new(clamped);
+
+    info!("VOLUME: {:?}", glob_vol.volume);
 }
