@@ -1,5 +1,5 @@
 .env
 Secrets*.toml
-
+/.direnv
 nvspincv-backend/.shuttle-storage
 /target
