@@ -58,16 +58,13 @@ fn main() {
     {
         app.add_plugins(RapierDebugRenderPlugin::default())
             .add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::default())
-            .add_systems(Update, (toggle_debug_renderer, volume));
+            .add_systems(Update, toggle_debug_renderer);
         bevy_mod_debugdump::print_schedule_graph(&mut app, Update);
     }
 
-    app.init_state::<AppState>().add_plugins((
-        window::Plugin,
-        camera::Plugin,
-        menu::Plugin,
-        game::Plugin,
-    ));
+    app.init_state::<AppState>()
+        .add_plugins((window::Plugin, camera::Plugin, menu::Plugin, game::Plugin))
+        .add_systems(Update, volume);
 
     app.run();
 }
