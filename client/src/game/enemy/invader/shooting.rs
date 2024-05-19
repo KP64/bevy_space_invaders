@@ -52,8 +52,6 @@ pub(super) struct Cooldown(Timer);
 
 impl Default for Cooldown {
     fn default() -> Self {
-        // TODO: Replace Timer after each shot?
-        // ? For Guidance: Look at the ufo::Spawner
         Self(Timer::from_seconds(
             rand::random::<f32>().mul_add(MAX_XTRA_SECONDS_TILL_SPAWN, SECONDS_TILL_SPAWN),
             TimerMode::Repeating,

@@ -180,7 +180,7 @@ fn spawn(
             AudioBundle {
                 source: asset_server.load("sounds/ufo/highpitch.wav"),
                 settings: PlaybackSettings {
-                    mode: audio::PlaybackMode::Loop, // TODO: Playing audio is not affected by GlobalVolume !!!!!!!!!!!
+                    mode: audio::PlaybackMode::Loop,
                     ..default()
                 },
             },
