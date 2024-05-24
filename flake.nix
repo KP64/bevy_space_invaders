@@ -20,7 +20,6 @@
       {
         devShell = pkgs.mkShell rec {
           nativeBuildInputs = with pkgs; [
-            nodejs
             pkg-config
             rust-analyzer
           ];
