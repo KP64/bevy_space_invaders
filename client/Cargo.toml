@@ -11,19 +11,19 @@ description.workspace = true
 
 [dependencies]
 bevy = { version = "0.13.2", features = ["dynamic_linking", "wayland", "wav"] }
-bevy-inspector-egui = "0.23"
+bevy-inspector-egui = "0.24"
 bevy_lunex = { git = "https://github.com/bytestring-net/bevy_lunex.git" }
 bevy_mod_debugdump = "0.10"
-bevy_rand = { version = "0.5", features = ["rand_chacha"] }
-bevy_rapier2d = { version = "0.25", features = [
+bevy_rand = { version = "0.6", features = ["rand_chacha"] }
+bevy_rapier2d = { version = "0.26", features = [
     "debug-render-2d",
     "simd-stable",
     "parallel",
 ] }
 bevy_screen_diagnostics = "0.5"
-bevy_simple_text_input = "0.6"
+bevy_simple_text_input = "0.7"
 image = "0.25"
-itertools = "0.12"
+itertools = "0.13"
 leafwing-input-manager = "0.13"
 serde.workspace = true
 serde_json.workspace = true

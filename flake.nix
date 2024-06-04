@@ -35,6 +35,8 @@
             libxkbcommon
             wayland
 
+            cargo-shuttle
+
             rustup
             mold
             llvmPackages_18.libcxxClang
